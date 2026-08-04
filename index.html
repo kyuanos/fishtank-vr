@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>X3DOM Head Tracking Demo</title>
+  <!-- X3DOM ライブラリ -->
+  <script src="https://www.x3dom.org/download/x3dom.js"></script>
+  <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
+  <!-- MediaPipe Face Mesh -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body style="background:#111; color:#fff; font-family:sans-serif; text-align:center;">
+
+  <h2>X3DOM フィッシュタンクVR テスト</h2>
+  <p>カメラを許可し、頭を左右・前後に動かしてください</p>
+
+  <x3d width="600px" height="400px" style="border: 2px solid #555;">
+    <scene>
+      <viewpoint id="vp" position="0 0 10" orientation="0 1 0 0" fieldOfView="0.8"></viewpoint>
+      
+      <transform id="targetBox" translation="0 0 0">
+        <shape>
+          <appearance>
+            <material diffuseColor="0.2 0.6 1.0" specularColor="0.5 0.5 0.5"></material>
+          </appearance>
+          <box size="2 2 2"></box>
+        </shape>
+      </transform>
+    </scene>
+  </x3d>
+
+  <video id="webcam" autoplay playsinline style="display:none;"></video>
+
+  <script>
+    const vp = document.getElementById('vp');
+    const videoElement = document.getElementById('webcam');
+
+    // MediaPipe Face Mesh の初期化
+    const faceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    faceMesh.onResults((results) => {
+      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        const landmarks = results.multiFaceLandmarks[0];
+        const nose = landmarks[1];
+        
+        const x = (0.5 - nose.x) * 15;
+        const y = (0.5 - nose.y) * 15;
+        const z = 5 + (1.0 - nose.z) * 10;
+
+        vp.setAttribute('position', `${x.toFixed(2)} ${y.toFixed(2)} ${z.toFixed(2)}`);
+      }
+    });
+
+    // 標準の getUserMedia を使ってカメラを起動＆ループ処理
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 }
+        });
+        videoElement.srcObject = stream;
+
+        videoElement.onloadedmetadata = () => {
+          videoElement.play();
+          processVideoFrame();
+        };
+      } catch (err) {
+        console.error("カメラのアクセスに失敗しました:", err);
+        alert("カメラへのアクセスを許可してください（ローカルサーバー経由で開いているか確認してください）。");
+      }
+    }
+
+    async function processVideoFrame() {
+      if (!videoElement.paused && !videoElement.ended) {
+        await faceMesh.send({ image: videoElement });
+        requestAnimationFrame(processVideoFrame);
+      }
+    }
+
+    startCamera();
+  </script>
+</body>
+</html>
