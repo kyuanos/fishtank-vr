@@ -3,89 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM Fish Tank VR</title>
+  <title>X3DOM Fish Tank VR (True Off-Axis)</title>
   
-  <!-- X3DOM ライブラリ -->
   <script src="https://www.x3dom.org/download/x3dom.js"></script>
   <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
-  
-  <!-- MediaPipe Face Mesh -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden; /* スクロールバーを完全非表示 */
-      background: #111;
-      color: #fff;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #111; color: #fff;
       font-family: sans-serif;
     }
-
-    /* X3D描画キャンバスを画面全体に固定 */
     x3d {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      border: none;
-      margin: 0;
-      padding: 0;
-      display: block;
-      z-index: 1;
+      position: absolute; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      border: none; margin: 0; padding: 0;
+      display: block; z-index: 1;
     }
-
-    /* UIオーバーレイ（テキストや操作ボタンを画面の上に浮かせる） */
     #ui-overlay {
-      position: absolute;
-      top: 10px;
-      left: 50%;
+      position: absolute; top: 10px; left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
-      text-align: center;
-      pointer-events: none; /* 下の3D操作を邪魔しない */
-      background: rgba(0, 0, 0, 0.5);
-      padding: 8px 16px;
-      border-radius: 8px;
+      z-index: 10; text-align: center;
+      pointer-events: none;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 16px; border-radius: 8px;
     }
-
-    #ui-overlay h2 {
-      margin: 0 0 4px 0;
-      font-size: 1.1rem;
-    }
-
-    #ui-overlay p {
-      margin: 0;
-      font-size: 0.85rem;
-      color: #ccc;
-    }
+    #ui-overlay h2 { margin: 0 0 4px 0; font-size: 1.1rem; }
+    #ui-overlay p { margin: 0; font-size: 0.85rem; color: #ccc; }
   </style>
 </head>
 <body>
 
-  <!-- UIテキスト（画面の上にオーバーレイ表示） -->
   <div id="ui-overlay">
-    <h2>X3DOM フィッシュタンクVR</h2>
-    <p>頭を動かすと視点が追従します（スマホ縦・横対応）</p>
+    <h2>X3DOM Fish Tank VR (Off-Axis Frustum)</h2>
+    <p>目の位置と画面サイズに合わせて視体積を斜めに再計算します</p>
   </div>
 
-  <!-- 全画面 3D 描画領域 -->
   <x3d id="x3dCanvas">
     <scene>
-      <viewpoint id="vp" position="0 0 10" orientation="0 1 0 0" fieldOfView="0.8"></viewpoint>
+      <viewpoint id="vp" position="0 0 10" orientation="0 1 0 0"></viewpoint>
       
-      <transform id="targetBox" rotation="0 1 0 0.523598776" translation="0 0 0">
+      <transform id="targetBox" rotation="0 1 0 0.523" translation="0 0 0">
         <shape>
           <appearance>
             <material diffuseColor="0.7 0.6 1.0" specularColor="0.5 0.5 0.5"></material>
           </appearance>
-          <box size="5 5 5"></box>
+          <box size="3 3 3"></box>
         </shape>
       </transform>
     </scene>
@@ -96,33 +63,65 @@
   <script>
     const vp = document.getElementById('vp');
     const videoElement = document.getElementById('webcam');
-    const x3dCanvas = document.getElementById('x3dCanvas');
 
-    // 画面アスペクト比・サイズの更新関数
-    function updateLayout() {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const aspect = width / height;
+    // 物理的なディスプレイ枠のサイズ設定（例: スマホ画面を幅10cm, 高さ18cmと仮定）
+    // 本来は画面のアスペクト比と実際の表示領域から算出
+    let screenWidth = 0.10;  // 10cm
+    let screenHeight = 0.18; // 18cm
 
-      // 縦持ち（aspect < 1）の時、視体積（視野角）が狭くなりすぎないよう微調整
-      if (aspect < 1.0) {
-        vp.setAttribute('fieldOfView', (0.8 / aspect).toFixed(2));
+    function updateScreenSize() {
+      const aspect = window.innerWidth / window.innerHeight;
+      if (aspect > 1) {
+        // 横画面
+        screenWidth = 0.18;
+        screenHeight = 0.10;
       } else {
-        vp.setAttribute('fieldOfView', '0.8');
+        // 縦画面
+        screenWidth = 0.10;
+        screenHeight = 0.18;
       }
+    }
+    window.addEventListener('resize', updateScreenSize);
+    window.addEventListener('orientationchange', updateScreenSize);
+    updateScreenSize();
 
-      // X3DOMキャンバスのリセット通知
-      if (x3dCanvas && x3dCanvas.runtime) {
-        x3dCanvas.runtime.resize(width, height);
+    /**
+     * 【重要】真の「Off-Axis 視体積再計算」ロジック
+     * 目の位置(PeX, PeY, PeZ)とディスプレイの4端(L, R, B, T)から非対称視錐台（透視投影行列）を直接計算する
+     */
+    function setOffAxisFrustum(PeX, PeY, PeZ) {
+      const near = 0.1;
+      const far = 100.0;
+
+      // ディスプレイの中心から画面端までの距離
+      const L = -screenWidth / 2;
+      const R =  screenWidth / 2;
+      const B = -screenHeight / 2;
+      const T =  screenHeight / 2;
+
+      // 目の位置から見た画面4端へのオフセット計算
+      const l = (L - PeX) * (near / PeZ);
+      const r = (R - PeX) * (near / PeZ);
+      const b = (B - PeY) * (near / PeZ);
+      const t = (T - PeY) * (near / PeZ);
+
+      // 非対称透視投影行列（Projection Matrix）の構築
+      const proj = new x3dom.fields.SFMatrix4f(
+        (2 * near) / (r - l), 0,                    (r + l) / (r - l),  0,
+        0,                    (2 * near) / (t - b), (t + b) / (t - b),  0,
+        0,                    0,                   -(far + near) / (far - near), -(2 * far * near) / (far - near),
+        0,                    0,                   -1,                  0
+      );
+
+      // X3DOMのViewpointに非対称視体積行列を上書き適用
+      if (vp && vp._x3domNode) {
+        vp._x3domNode.getProjectionMatrix = function() {
+          return proj;
+        };
       }
     }
 
-    // リサイズ・画面回転イベントの登録
-    window.addEventListener('resize', updateLayout);
-    window.addEventListener('orientationchange', updateLayout);
-    updateLayout();
-
-    // MediaPipe Face Mesh の初期化
+    // MediaPipe Face Mesh
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
@@ -139,29 +138,32 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        const x = (0.5 - nose.x) * 15;
-        const y = (0.5 - nose.y) * 15;
-        const z = 5 + (1.0 - nose.z) * 10;
+        // 目の位置（メートル単位の推定値）
+        const PeX = (nose.x - 0.5) * 0.3; // 左右移動
+        const PeY = (0.5 - nose.y) * 0.3; // 上下移動
+        const PeZ = 0.4 + (nose.z) * 0.3;  // 奥行き（画面からの距離）
 
-        vp.setAttribute('position', `${x.toFixed(2)} ${y.toFixed(2)} ${z.toFixed(2)}`);
+        // 1. Viewpointの位置（カメラ位置）を更新
+        vp.setAttribute('position', `${PeX} ${PeY} ${PeZ}`);
+        
+        // 2. 視体積（Projection Matrix）を目の位置に合わせて斜めに歪ませる再計算
+        setOffAxisFrustum(PeX, PeY, PeZ);
       }
     });
 
-    // カメラ起動処理
+    // カメラ起動
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: "user" }
         });
         videoElement.srcObject = stream;
-
         videoElement.onloadedmetadata = () => {
           videoElement.play();
           processVideoFrame();
         };
       } catch (err) {
-        console.error("カメラのアクセスに失敗しました:", err);
-        alert("カメラへのアクセスを許可してください（HTTPS環境またはlocalhostで開く必要があります）。");
+        console.error("カメラアクセスエラー:", err);
       }
     }
 
