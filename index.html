@@ -92,7 +92,7 @@
         const fovFactor = aspect < 1 ? (fov * aspect) : fov;
 
         // ★余白の調整（1.8 で上下左右に綺麗なゆとりが生まれます）
-        const marginFactor = 1.8;
+        const marginFactor = 2.8;
 
         const baseCameraZ = (maxDimension / (2 * Math.tan(fovFactor / 2))) * marginFactor;
         vp.setAttribute('position', `0 0 ${baseCameraZ.toFixed(2)}`);
