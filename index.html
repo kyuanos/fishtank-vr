@@ -102,7 +102,7 @@
         // X3DOMの回転指定方法: "X軸 Y軸 Z軸 回転角度(ラジアン)"
         // 顔のY軸移動（上下）でX軸回転、顔のX軸移動（左右）でY軸回転を行わせる
         const rotX = -offsetY * sensitivity; // 上下覗き込み
-        const rotY = -offsetX * sensitivity; // 左右覗き込み
+        const rotY = offsetX * sensitivity; // 左右覗き込み
 
         // 回転の大きさを計算（ベクトルの長さ）
         const angle = Math.sqrt(rotX * rotX + rotY * rotY);
