@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM Fish Tank VR (Safe Fix)</title>
+  <title>X3DOM Fish Tank VR (Distance Fixed)</title>
   
-  <!-- X3DOM CDN -->
   <script src="https://www.x3dom.org/download/x3dom.js"></script>
   <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
-  <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
   <style>
@@ -36,28 +34,28 @@
       max-width: 90vw;
     }
     #ui-overlay h2 { margin: 0 0 4px 0; font-size: 1rem; }
-    #debug-log { margin: 4px 0 0 0; font-size: 0.75rem; color: #ff6b6b; white-space: pre-wrap; }
+    #debug-log { margin: 4px 0 0 0; font-size: 0.75rem; color: #6bffb8; white-space: pre-wrap; }
   </style>
 </head>
 <body>
 
   <div id="ui-overlay">
     <h2>X3DOM Fish Tank VR</h2>
-    <div id="debug-log">ステータス: 初期化中...</div>
+    <div id="debug-log">カメラ許可を待っています...</div>
   </div>
 
   <x3d id="x3dCanvas">
     <scene>
-      <!-- Viewpointの指定 -->
-      <viewpoint id="vp" position="0 0 10" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
+      <!-- カメラ位置: Box(Z=0) から Z=5 ほど離れた場所をデフォルトに -->
+      <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
-      <!-- テスト用ボックス -->
-      <transform id="targetBox" rotation="0.5 1 0 0.5">
+      <!-- テスト用ボックス (中心 Z=0) -->
+      <transform id="targetBox" rotation="0.5 1 0 0.5" translation="0 0 0">
         <shape>
           <appearance>
             <material diffuseColor="0.2 0.7 1.0" specularColor="0.5 0.5 0.5"></material>
           </appearance>
-          <box size="2 2 2"></box>
+          <box size="1.5 1.5 1.5"></box>
         </shape>
       </transform>
     </scene>
@@ -69,7 +67,6 @@
     const logElem = document.getElementById('debug-log');
     function log(msg) {
       logElem.innerText = msg;
-      console.log(msg);
     }
 
     const vp = document.getElementById('vp');
@@ -79,10 +76,8 @@
     let screenHeight = 0.18;
     let isX3domReady = false;
 
-    // X3DOMのノード準備完了を検知
     document.addEventListener('x3dom-loaded', () => {
       isX3domReady = true;
-      log("X3DOM準備完了。カメラ接続中...");
     }, false);
 
     function updateScreenSize() {
@@ -98,7 +93,6 @@
 
     // Off-Axis 視体積再計算
     function setOffAxisFrustum(PeX, PeY, PeZ) {
-      // X3DOMの内部ノードが生成されていない場合は実行をスキップ（表示消滅の防止）
       if (!isX3domReady || !vp || !vp._x3domNode) return;
 
       const near = 0.1;
@@ -147,15 +141,22 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        const PeX = (nose.x - 0.5) * 0.3;
-        const PeY = (0.5 - nose.y) * 0.3;
-        const PeZ = 0.4 + (nose.z) * 0.3;
+        // -------------------------------------------------------------
+        // 【修正ポイント】
+        // X, Y の感度を調整し、Z（奥行き）が近づきすぎないよう最低距離 (2.0) を保証
+        // -------------------------------------------------------------
+        const PeX = (0.5 - nose.x) * 2.0;  // 左右の移動範囲
+        const PeY = (0.5 - nose.y) * 2.0;  // 上下の移動範囲
+        
+        // 画面からの距離（絶対に 2.0 未満にならないようにガード）
+        const PeZ = Math.max(2.0, 5.0 + (nose.z * 5.0));
 
         vp.setAttribute('position', `${PeX} ${PeY} ${PeZ}`);
         setOffAxisFrustum(PeX, PeY, PeZ);
-        log(`追従中 - Eye Pos: (${PeX.toFixed(2)}, ${PeY.toFixed(2)}, ${PeZ.toFixed(2)})`);
+        
+        log(`追従中 | 目の位置: X=${PeX.toFixed(2)}, Y=${PeY.toFixed(2)}, Z=${PeZ.toFixed(2)}`);
       } else {
-        log("顔を検出できません");
+        log("顔を検出できません（カメラの正面に顔を向けてください）");
       }
     });
 
@@ -171,7 +172,7 @@
           processVideoFrame();
         };
       } catch (err) {
-        log("カメラ起動失敗: " + err.message + "\n※ブラウザのカメラ権限を確認してください");
+        log("カメラ起動失敗: " + err.message);
       }
     }
 
