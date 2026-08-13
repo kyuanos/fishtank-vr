@@ -50,12 +50,12 @@
       <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
       <!-- テスト用ボックス (中心 Z=0) -->
-      <transform id="targetBox" rotation="0.5 1 0 0.5" translation="0 0 0">
+      <transform id="targetBox" rotation="0 1 0 0" translation="0 0 0">
         <shape>
           <appearance>
             <material diffuseColor="0.2 0.7 1.0" specularColor="0.5 0.5 0.5"></material>
           </appearance>
-          <box size="1.5 1.5 1.5"></box>
+          <box size="1 1 1"></box>
         </shape>
       </transform>
     </scene>
@@ -149,7 +149,7 @@
         const PeY = (0.5 - nose.y) * 2.0;  // 上下の移動範囲
         
         // 画面からの距離（絶対に 2.0 未満にならないようにガード）
-        const PeZ = Math.max(2.0, 5.0 + (nose.z * 5.0));
+        const PeZ = Math.max(2.0, 7.0 + (nose.z * 5.0));
 
         vp.setAttribute('position', `${PeX} ${PeY} ${PeZ}`);
         setOffAxisFrustum(PeX, PeY, PeZ);
