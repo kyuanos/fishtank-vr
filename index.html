@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM Face Tracking Rotation</title>
+  <title>X3DOM Auto-Fit Object</title>
   
   <script src="https://www.x3dom.org/download/x3dom.js"></script>
   <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
@@ -40,23 +40,23 @@
 <body>
 
   <div id="ui-overlay">
-    <h2>X3DOM 視線追従オブジェクト回転</h2>
-    <div id="debug-log">カメラ許可を待っています...</div>
+    <h2>X3DOM 視線追従 (自動全体収め)</h2>
+    <div id="debug-log">初期化中...</div>
   </div>
 
   <x3d id="x3dCanvas">
     <scene>
-      <!-- カメラ位置は画面真正面で固定 (Z=5) -->
+      <!-- カメラ位置 (初期値: Z=5、fieldOfViewは約45度/0.785rad) -->
       <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
-      <!-- テスト用ボックス (中心 Z=0, 初期は回転なし) -->
+      <!-- テスト用ボックス (例として幅5.0、高さ2.0、奥行き1.0の直方体にしてみます) -->
       <transform id="targetBox" rotation="0 1 0 0" translation="0 0 0">
         <shape>
           <appearance>
             <material diffuseColor="0.2 0.7 1.0" specularColor="0.5 0.5 0.5"></material>
           </appearance>
-          <!-- 大きさを 2.5 に変更して大きめの真正面表示 -->
-          <box size="2.5 2.5 2.5"></box>
+          <!-- ★ここをどんなサイズ(例: 10 3 2 等)に変えても画面内に収まります -->
+          <box size="5.0 2.0 1.0"></box>
         </shape>
       </transform>
     </scene>
@@ -70,10 +70,61 @@
       logElem.innerText = msg;
     }
 
+    const vp = document.getElementById('vp');
     const targetBox = document.getElementById('targetBox');
     const videoElement = document.getElementById('webcam');
 
+    let baseCameraZ = 5; // 自動計算された最適なカメラ距離
+
+    // -------------------------------------------------------------
+    // 物体の大きさに応じてカメラ距離(Z)を自動調整する関数
+    // -------------------------------------------------------------
+    function fitObjectToScreen() {
+      if (!targetBox || !targetBox._x3domNode) return;
+
+      try {
+        // X3DOMのノードからバウンディングボックス（最小値/最大値）を取得
+        const bbox = targetBox._x3domNode.getBBox();
+        const min = bbox.min;
+        const max = bbox.max;
+
+        // 物体の幅・高さ・奥行きを計算
+        const sizeX = max.x - min.x;
+        const sizeY = max.y - min.y;
+        const sizeZ = max.z - min.z;
+
+        // 物体の最大の対角線半径（または最も大きい幅・高さ）を取得
+        const maxDimension = Math.max(sizeX, sizeY, sizeZ);
+
+        // カメラの視野角 (FOV: ラジアン)
+        const fov = parseFloat(vp.getAttribute('fieldOfView')) || 0.785;
+        const aspect = window.innerWidth / window.innerHeight;
+
+        // 画面の縦横比を考慮して最適な視野サイズを確定
+        const fovFactor = aspect < 1 ? (fov * aspect) : fov;
+
+        // 画面内に安全に収めるための距離計算 (少し余裕を持たせるため 1.2 倍の安全係数を乗算)
+        const marginFactor = 1.2;
+        baseCameraZ = (maxDimension / (2 * Math.tan(fovFactor / 2))) * marginFactor;
+
+        // カメラのZ位置を更新
+        vp.setAttribute('position', `0 0 ${baseCameraZ.toFixed(2)}`);
+        log(`自動フィット完了 | 物体サイズ: ${sizeX.toFixed(1)}x${sizeY.toFixed(1)}x${sizeZ.toFixed(1)} -> カメラ距離Z: ${baseCameraZ.toFixed(2)}`);
+      } catch (e) {
+        log("フィット計算待ち...");
+      }
+    }
+
+    // X3DOMのロード完了時および画面リサイズ時に実行
+    document.addEventListener('x3dom-loaded', () => {
+      setTimeout(fitObjectToScreen, 200); // 描画構築を待って適用
+    }, false);
+
+    window.addEventListener('resize', fitObjectToScreen);
+
+    // -------------------------------------------------------------
     // MediaPipe Face Mesh
+    // -------------------------------------------------------------
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
@@ -90,35 +141,23 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        // -------------------------------------------------------------
-        // 顔の画面中央からのズレ量を計算 (-0.5 〜 0.5 の範囲)
-        // -------------------------------------------------------------
-        const offsetX = (nose.x - 0.5); // 右に行くとプラス、左に行くとマイナス
-        const offsetY = (nose.y - 0.5); // 下に行くとプラス、上に行くとマイナス
+        const offsetX = (nose.x - 0.5);
+        const offsetY = (nose.y - 0.5);
 
-        // 回転の傾き強度（数字を大きくすると顔の動きに対して大きく傾きます）
         const sensitivity = 1.2;
 
-        // X3DOMの回転指定方法: "X軸 Y軸 Z軸 回転角度(ラジアン)"
-        // 顔のY軸移動（上下）でX軸回転、顔のX軸移動（左右）でY軸回転を行わせる
-        const rotX = -offsetY * sensitivity; // 上下覗き込み
-        const rotY = offsetX * sensitivity; // 左右覗き込み
+        const rotX = -offsetY * sensitivity; 
+        const rotY =  offsetX * sensitivity; // 左右逆（右下覗き込み対応）
 
-        // 回転の大きさを計算（ベクトルの長さ）
         const angle = Math.sqrt(rotX * rotX + rotY * rotY);
 
         if (angle > 0.001) {
-          // X3DOMの rotation 属性形式（軸ベクトル + 回転角）に更新
           const axisX = rotX / angle;
           const axisY = rotY / angle;
           targetBox.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
         } else {
           targetBox.setAttribute('rotation', '0 1 0 0');
         }
-
-        log(`追従中 | 顔位置: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)} | 傾き角度: ${angle.toFixed(2)} rad`);
-      } else {
-        log("顔を検出できません（カメラの正面に顔を向けてください）");
       }
     });
 
