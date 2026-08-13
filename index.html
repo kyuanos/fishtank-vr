@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM Fish Tank VR (True Off-Axis)</title>
+  <title>X3DOM Fish Tank VR (Safe Fix)</title>
   
+  <!-- X3DOM CDN -->
   <script src="https://www.x3dom.org/download/x3dom.js"></script>
   <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
+  <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
   <style>
@@ -29,30 +31,33 @@
       transform: translateX(-50%);
       z-index: 10; text-align: center;
       pointer-events: none;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       padding: 8px 16px; border-radius: 8px;
+      max-width: 90vw;
     }
-    #ui-overlay h2 { margin: 0 0 4px 0; font-size: 1.1rem; }
-    #ui-overlay p { margin: 0; font-size: 0.85rem; color: #ccc; }
+    #ui-overlay h2 { margin: 0 0 4px 0; font-size: 1rem; }
+    #debug-log { margin: 4px 0 0 0; font-size: 0.75rem; color: #ff6b6b; white-space: pre-wrap; }
   </style>
 </head>
 <body>
 
   <div id="ui-overlay">
-    <h2>X3DOM Fish Tank VR (Off-Axis Frustum)</h2>
-    <p>目の位置と画面サイズに合わせて視体積を斜めに再計算します</p>
+    <h2>X3DOM Fish Tank VR</h2>
+    <div id="debug-log">ステータス: 初期化中...</div>
   </div>
 
   <x3d id="x3dCanvas">
     <scene>
-      <viewpoint id="vp" position="0 0 10" orientation="0 1 0 0"></viewpoint>
+      <!-- Viewpointの指定 -->
+      <viewpoint id="vp" position="0 0 10" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
-      <transform id="targetBox" rotation="0 1 0 0.523" translation="0 0 0">
+      <!-- テスト用ボックス -->
+      <transform id="targetBox" rotation="0.5 1 0 0.5">
         <shape>
           <appearance>
-            <material diffuseColor="0.7 0.6 1.0" specularColor="0.5 0.5 0.5"></material>
+            <material diffuseColor="0.2 0.7 1.0" specularColor="0.5 0.5 0.5"></material>
           </appearance>
-          <box size="3 3 3"></box>
+          <box size="2 2 2"></box>
         </shape>
       </transform>
     </scene>
@@ -61,63 +66,67 @@
   <video id="webcam" autoplay playsinline style="display:none;"></video>
 
   <script>
+    const logElem = document.getElementById('debug-log');
+    function log(msg) {
+      logElem.innerText = msg;
+      console.log(msg);
+    }
+
     const vp = document.getElementById('vp');
     const videoElement = document.getElementById('webcam');
 
-    // 物理的なディスプレイ枠のサイズ設定（例: スマホ画面を幅10cm, 高さ18cmと仮定）
-    // 本来は画面のアスペクト比と実際の表示領域から算出
-    let screenWidth = 0.10;  // 10cm
-    let screenHeight = 0.18; // 18cm
+    let screenWidth = 0.10;
+    let screenHeight = 0.18;
+    let isX3domReady = false;
+
+    // X3DOMのノード準備完了を検知
+    document.addEventListener('x3dom-loaded', () => {
+      isX3domReady = true;
+      log("X3DOM準備完了。カメラ接続中...");
+    }, false);
 
     function updateScreenSize() {
       const aspect = window.innerWidth / window.innerHeight;
       if (aspect > 1) {
-        // 横画面
-        screenWidth = 0.18;
-        screenHeight = 0.10;
+        screenWidth = 0.18; screenHeight = 0.10;
       } else {
-        // 縦画面
-        screenWidth = 0.10;
-        screenHeight = 0.18;
+        screenWidth = 0.10; screenHeight = 0.18;
       }
     }
     window.addEventListener('resize', updateScreenSize);
-    window.addEventListener('orientationchange', updateScreenSize);
     updateScreenSize();
 
-    /**
-     * 【重要】真の「Off-Axis 視体積再計算」ロジック
-     * 目の位置(PeX, PeY, PeZ)とディスプレイの4端(L, R, B, T)から非対称視錐台（透視投影行列）を直接計算する
-     */
+    // Off-Axis 視体積再計算
     function setOffAxisFrustum(PeX, PeY, PeZ) {
+      // X3DOMの内部ノードが生成されていない場合は実行をスキップ（表示消滅の防止）
+      if (!isX3domReady || !vp || !vp._x3domNode) return;
+
       const near = 0.1;
       const far = 100.0;
 
-      // ディスプレイの中心から画面端までの距離
       const L = -screenWidth / 2;
       const R =  screenWidth / 2;
       const B = -screenHeight / 2;
       const T =  screenHeight / 2;
 
-      // 目の位置から見た画面4端へのオフセット計算
       const l = (L - PeX) * (near / PeZ);
       const r = (R - PeX) * (near / PeZ);
       const b = (B - PeY) * (near / PeZ);
       const t = (T - PeY) * (near / PeZ);
 
-      // 非対称透視投影行列（Projection Matrix）の構築
-      const proj = new x3dom.fields.SFMatrix4f(
-        (2 * near) / (r - l), 0,                    (r + l) / (r - l),  0,
-        0,                    (2 * near) / (t - b), (t + b) / (t - b),  0,
-        0,                    0,                   -(far + near) / (far - near), -(2 * far * near) / (far - near),
-        0,                    0,                   -1,                  0
-      );
+      try {
+        const proj = new x3dom.fields.SFMatrix4f(
+          (2 * near) / (r - l), 0,                    (r + l) / (r - l),  0,
+          0,                    (2 * near) / (t - b), (t + b) / (t - b),  0,
+          0,                    0,                   -(far + near) / (far - near), -(2 * far * near) / (far - near),
+          0,                    0,                   -1,                  0
+        );
 
-      // X3DOMのViewpointに非対称視体積行列を上書き適用
-      if (vp && vp._x3domNode) {
         vp._x3domNode.getProjectionMatrix = function() {
           return proj;
         };
+      } catch (e) {
+        log("行列計算エラー: " + e.message);
       }
     }
 
@@ -138,20 +147,19 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        // 目の位置（メートル単位の推定値）
-        const PeX = (nose.x - 0.5) * 0.3; // 左右移動
-        const PeY = (0.5 - nose.y) * 0.3; // 上下移動
-        const PeZ = 0.4 + (nose.z) * 0.3;  // 奥行き（画面からの距離）
+        const PeX = (nose.x - 0.5) * 0.3;
+        const PeY = (0.5 - nose.y) * 0.3;
+        const PeZ = 0.4 + (nose.z) * 0.3;
 
-        // 1. Viewpointの位置（カメラ位置）を更新
         vp.setAttribute('position', `${PeX} ${PeY} ${PeZ}`);
-        
-        // 2. 視体積（Projection Matrix）を目の位置に合わせて斜めに歪ませる再計算
         setOffAxisFrustum(PeX, PeY, PeZ);
+        log(`追従中 - Eye Pos: (${PeX.toFixed(2)}, ${PeY.toFixed(2)}, ${PeZ.toFixed(2)})`);
+      } else {
+        log("顔を検出できません");
       }
     });
 
-    // カメラ起動
+    // Webカメラ起動
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -163,7 +171,7 @@
           processVideoFrame();
         };
       } catch (err) {
-        console.error("カメラアクセスエラー:", err);
+        log("カメラ起動失敗: " + err.message + "\n※ブラウザのカメラ権限を確認してください");
       }
     }
 
