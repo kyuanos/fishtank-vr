@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Anamorphic Portal Box - Screen Fitted</title>
+  <title>Anamorphic Portal Box with Cube</title>
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     #stage { width: 100vw; height: 100vh; display: block; }
@@ -32,7 +32,6 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     
-    // カメラの基準位置 (Z=5)
     const baseCameraZ = 5;
     camera.position.set(0, 0, baseCameraZ);
 
@@ -40,64 +39,87 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // 2. Load Textures
+    // ライティング（内部のキューブを綺麗に見せるため）
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    dirLight.position.set(2, 4, 3);
+    scene.add(dirLight);
+
+    // 2. Load Textures (部屋用)
     const textureLoader = new THREE.TextureLoader();
-    const materials = [
+    const roomMaterials = [
       new THREE.MeshBasicMaterial({ map: textureLoader.load('右壁.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('左壁.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('天井壁.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('床.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('奥壁.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, side: THREE.BackSide }) // 手前（透明）
+      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, side: THREE.BackSide })
     ];
 
     let room;
+    let cubeMesh; // ★ 部屋の中の「正方形キューブ」
     let screenWidth = 0;
     let screenHeight = 0;
-    const depthRatio = 0.35; // 奥行きの深さ倍率
+    
+    const depthRatio = 0.35; // 奥行き倍率
 
-    // 3. 画面サイズ（Z=0）に合わせて箱を完全フィットさせる関数
-    function fitRoomToScreen() {
+    // 3. 部屋と内部キューブの生成
+    function createSceneObjects() {
       const fovRad = (camera.fov * Math.PI) / 180;
       const aspect = window.innerWidth / window.innerHeight;
 
-      // Z=0（画面位置）における正確な表示幅・高さ
       screenHeight = 2 * Math.tan(fovRad / 2) * baseCameraZ;
       screenWidth = screenHeight * aspect;
       const roomDepth = screenHeight * depthRatio;
 
-      if (room) {
-        scene.remove(room);
-        room.geometry.dispose();
-      }
+      // 古いオブジェクトの破棄
+      if (room) scene.remove(room);
+      if (cubeMesh) scene.remove(cubeMesh);
 
-      // 箱を作成（手前フチがちょうど Z=0 になるように配置）
-      const boxGeo = new THREE.BoxGeometry(screenWidth, screenHeight, roomDepth);
-      room = new THREE.Mesh(boxGeo, materials);
+      // --- ① 外側の部屋（背景） ---
+      const roomGeo = new THREE.BoxGeometry(screenWidth, screenHeight, roomDepth);
+      room = new THREE.Mesh(roomGeo, roomMaterials);
       room.position.set(0, 0, -roomDepth / 2);
       scene.add(room);
+
+      // --- ② 部屋の中の正方形キューブ（物体） ---
+      const cubeSize = Math.min(screenWidth, screenHeight) * 0.35; // 画面幅に合わせた正方形サイズ
+      const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+      
+      // キューブ用のマテリアル（単色またはテクスチャ）
+      const cubeMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x44aa88, 
+        roughness: 0.4,
+        metalness: 0.2
+      });
+      
+      cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
+      // 部屋の中央〜少し奥に配置
+      cubeMesh.position.set(0, -screenHeight*0.1, -roomDepth * 0.5);
+      // 少し角度をつけると立体感が強調されます
+      cubeMesh.rotation.y = Math.PI / 6; 
+      scene.add(cubeMesh);
     }
 
-    fitRoomToScreen();
+    createSceneObjects();
 
     window.addEventListener('resize', () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
       camera.aspect = w / h;
       renderer.setSize(w, h);
-      fitRoomToScreen();
+      createSceneObjects();
     });
 
-    // 4. Off-Axis Projection（四隅固定視体積計算）
+    // 4. Off-Axis Projection（視点追従）
     function setOffAxisProjection(headX, headY) {
-      // 顔の位置に応じたカメラ位置（左右の動きを正常化するため headX は反転）
       const camX = -headX * 4;
       const camY = -headY * 4;
       const camZ = baseCameraZ;
 
       camera.position.set(camX, camY, camZ);
 
-      // 画面の四隅 (Z=0 Plane)
       const left   = -screenWidth / 2 - camX;
       const right  =  screenWidth / 2 - camX;
       const top    =  screenHeight / 2 - camY;
@@ -106,18 +128,16 @@
       const near = camera.near;
       const far  = camera.far;
 
-      // 近クリップ面(near)での表示領域をスケール補正
       const scale = near / camZ;
       const l = left * scale;
       const r = right * scale;
       const t = top * scale;
       const b = bottom * scale;
 
-      // カメラの透視投影行列をカスタム設定（四隅をディスプレイ枠に固定）
       camera.projectionMatrix.makePerspective(l, r, t, b, near, far);
     }
 
-    // 5. Face Tracking Setup
+    // 5. Face Tracking
     let currentX = 0, currentY = 0;
     let targetX = 0, targetY = 0;
 
@@ -157,11 +177,15 @@
     }
 
     function render() {
-      // 滑らかな移動（LERP補間）
       currentX += (targetX - currentX) * 0.12;
       currentY += (targetY - currentY) * 0.12;
 
       setOffAxisProjection(currentX, currentY);
+
+      // キューブを少しだけ自転させて動きをつけることも可能
+      if (cubeMesh) {
+        // cubeMesh.rotation.y += 0.005; // 回転させたい場合はコメントアウト解除
+      }
 
       renderer.render(scene, camera);
       requestAnimationFrame(render);
