@@ -46,21 +46,14 @@
     dirLight.position.set(2, 4, 3);
     scene.add(dirLight);
 
-    // エラーログ出力と確実に描画反映させる読み込み指定
-    const backTexture = textureLoader.load(
-      '奥壁２.jpg',
-      () => { console.log('奥壁２.jpg の読み込み成功'); },
-      undefined,
-      (err) => { console.error('奥壁２.jpg の読み込み失敗:', err); }
-    );
-
-    // マテリアル生成
-    const materials = [
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('右壁.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('左壁.jpg'), side: THREE.BackSide }),
+    // 2. Load Textures (部屋用)
+    const textureLoader = new THREE.TextureLoader();
+    const roomMaterials = [
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('右壁２.jpg'), side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('左壁２.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('天井壁.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('床.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('奥壁２.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, side: THREE.BackSide })
     ];
 
