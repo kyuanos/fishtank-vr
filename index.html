@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM Face Tracking Rotation</title>
+  <title>X3DOM 3D Box Hologram Tracking</title>
   
   <script src="https://www.x3dom.org/download/x3dom.js"></script>
   <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
@@ -15,7 +15,7 @@
       margin: 0; padding: 0;
       width: 100%; height: 100%;
       overflow: hidden;
-      background: #111; color: #fff;
+      background: #000; color: #fff;
       font-family: sans-serif;
     }
     x3d {
@@ -29,7 +29,7 @@
       transform: translateX(-50%);
       z-index: 10; text-align: center;
       pointer-events: none;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       padding: 8px 16px; border-radius: 8px;
       max-width: 90vw;
     }
@@ -40,23 +40,59 @@
 <body>
 
   <div id="ui-overlay">
-    <h2>X3DOM 視線追従オブジェクト回転</h2>
+    <h2>デジタルフィギュア箱（ホログラム表示）</h2>
     <div id="debug-log">カメラ許可を待っています...</div>
   </div>
 
   <x3d id="x3dCanvas">
     <scene>
-      <!-- カメラ位置（Zは自動調整されます） -->
       <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
-      <!-- テスト用ボックス (どのようなサイズに変更してもゆとりをもって自動調整されます) -->
-      <transform id="targetBox" rotation="0 1 0 0" translation="0 0 0">
-        <shape>
-          <appearance>
-            <material diffuseColor="0.2 0.7 1.0" specularColor="0.5 0.5 0.5"></material>
-          </appearance>
-          <box size="2.5 2.5 2.5"></box>
-        </shape>
+      <!-- 全体を格納するショーケース（箱）グループ -->
+      <transform id="roomGroup" rotation="0 1 0 0" translation="0 0 0">
+        
+        <!-- 【奥の壁】 -->
+        <transform translation="0 0 -2">
+          <shape>
+            <appearance><material diffuseColor="0.1 0.1 0.15"></material></appearance>
+            <box size="4 4 0.1"></box>
+          </shape>
+        </transform>
+
+        <!-- 【床（魔法陣風・グリッド風パターン）】 -->
+        <transform translation="0 -2 0" rotation="1 0 0 -1.5708">
+          <shape>
+            <appearance><material diffuseColor="0.15 0.05 0.25" specularColor="0.8 0.2 0.8"></material></appearance>
+            <box size="4 4 0.1"></box>
+          </shape>
+        </transform>
+
+        <!-- 【左の壁】 -->
+        <transform translation="-2 0 0" rotation="0 1 0 1.5708">
+          <shape>
+            <appearance><material diffuseColor="0.08 0.08 0.12"></material></appearance>
+            <box size="4 4 0.1"></box>
+          </shape>
+        </transform>
+
+        <!-- 【右の壁】 -->
+        <transform translation="2 0 0" rotation="0 1 0 -1.5708">
+          <shape>
+            <appearance><material diffuseColor="0.08 0.08 0.12"></material></appearance>
+            <box size="4 4 0.1"></box>
+          </shape>
+        </transform>
+
+        <!-- 【中央のフィギュア / オブジェクト】 -->
+        <transform id="targetBox" translation="0 -0.5 0">
+          <shape>
+            <appearance>
+              <material diffuseColor="0.2 0.8 1.0" specularColor="0.8 0.8 0.8"></material>
+            </appearance>
+            <box size="1.5 2.2 1.5"></box>
+          </shape>
+        </transform>
+
       </transform>
     </scene>
   </x3d>
@@ -65,47 +101,13 @@
 
   <script>
     const logElem = document.getElementById('debug-log');
-    function log(msg) {
-      logElem.innerText = msg;
-    }
+    function log(msg) { logElem.innerText = msg; }
 
     const vp = document.getElementById('vp');
-    const targetBox = document.getElementById('targetBox');
+    const roomGroup = document.getElementById('roomGroup');
     const videoElement = document.getElementById('webcam');
 
-    // -------------------------------------------------------------
-    // 物体の大きさに応じてカメラ距離(Z)を自動調整し、余白をつくる関数
-    // -------------------------------------------------------------
-    function fitObjectToScreen() {
-      if (!targetBox || !targetBox._x3domNode) return;
-
-      try {
-        const bbox = targetBox._x3domNode.getBBox();
-        const sizeX = bbox.max.x - bbox.min.x;
-        const sizeY = bbox.max.y - bbox.min.y;
-        const sizeZ = bbox.max.z - bbox.min.z;
-
-        const maxDimension = Math.max(sizeX, sizeY, sizeZ);
-
-        const fov = parseFloat(vp.getAttribute('fieldOfView')) || 0.785;
-        const aspect = window.innerWidth / window.innerHeight;
-        const fovFactor = aspect < 1 ? (fov * aspect) : fov;
-
-        // ★余白の調整（1.8 で上下左右に綺麗なゆとりが生まれます）
-        const marginFactor = 2.8;
-
-        const baseCameraZ = (maxDimension / (2 * Math.tan(fovFactor / 2))) * marginFactor;
-        vp.setAttribute('position', `0 0 ${baseCameraZ.toFixed(2)}`);
-      } catch (e) {
-        // ロード待ち用
-      }
-    }
-
-    document.addEventListener('x3dom-loaded', () => {
-      setTimeout(fitObjectToScreen, 200);
-    }, false);
-
-    window.addEventListener('resize', fitObjectToScreen);
+    let frameCount = 0;
 
     // MediaPipe Face Mesh
     const faceMesh = new FaceMesh({
@@ -120,15 +122,21 @@
     });
 
     faceMesh.onResults((results) => {
+      frameCount++;
+
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
+        // 顔の画面中央からのズレ (-0.5 〜 0.5)
         const offsetX = (nose.x - 0.5);
         const offsetY = (nose.y - 0.5);
 
-        const sensitivity = 1.2;
+        // ★パースペクティブ（視差）感度
+        const sensitivity = 1.3;
 
+        // 顔の動きに合わせて「箱全体」を連動傾斜させることで、
+        // 画面枠を「窓」とした奥行き（床・奥壁・側面の変化）を生み出します
         const rotX = -offsetY * sensitivity; 
         const rotY =  offsetX * sensitivity; 
 
@@ -137,14 +145,14 @@
         if (angle > 0.001) {
           const axisX = rotX / angle;
           const axisY = rotY / angle;
-          targetBox.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
+          roomGroup.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
         } else {
-          targetBox.setAttribute('rotation', '0 1 0 0');
+          roomGroup.setAttribute('rotation', '0 1 0 0');
         }
 
-        log(`追従中 | 顔位置: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)} | 傾き角度: ${angle.toFixed(2)} rad`);
+        log(`[#${frameCount}] 追従中 | 覗き込み位置: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)}`);
       } else {
-        log("顔を検出できません（カメラの正面に顔を向けてください）");
+        log(`[#${frameCount}] 顔を検出できません`);
       }
     });
 
@@ -165,10 +173,14 @@
     }
 
     async function processVideoFrame() {
-      if (!videoElement.paused && !videoElement.ended) {
-        await faceMesh.send({ image: videoElement });
-        requestAnimationFrame(processVideoFrame);
+      if (videoElement.readyState >= 2 && !videoElement.paused && !videoElement.ended) {
+        try {
+          await faceMesh.send({ image: videoElement });
+        } catch (e) {
+          console.error("FaceMeshエラー:", e);
+        }
       }
+      requestAnimationFrame(processVideoFrame);
     }
 
     startCamera();
