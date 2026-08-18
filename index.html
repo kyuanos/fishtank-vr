@@ -124,27 +124,37 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        const offsetX = (nose.x - 0.5);
-        const offsetY = (nose.y - 0.5);
+        // -------------------------------------------------------------
+        // 顔の画面中央からのズレ量を計算 (-0.5 〜 0.5 の範囲)
+        // -------------------------------------------------------------
+        const offsetX = (nose.x - 0.5); // 右に行くとプラス
+        const offsetY = (nose.y - 0.5); // 下に行くとプラス
 
-        const sensitivity = 1.2;
+        // 覗き込みの移動強度（ガラスの奥の深さ感）
+        const eyeMoveScale = 3.0; 
 
-        const rotX = -offsetY * sensitivity; 
-        const rotY =  offsetX * sensitivity; 
+        // 1. 物体は回さず正面で固定！
+        targetBox.setAttribute('rotation', '0 1 0 0');
 
-        const angle = Math.sqrt(rotX * rotX + rotY * rotY);
+        // 2. 見る人の目（カメラ）の位置を、顔の動きに合わせて平行移動
+        // 右から覗くとカメラが右へ移動するため、相対的に物体の右側面が見える
+        const camX =  offsetX * eyeMoveScale;
+        const camY = -offsetY * eyeMoveScale; // 画面Y軸と3D空間Y軸の反転補正
+        const camZ = baseCameraZ;             // 自動調整されたベース距離
 
-        if (angle > 0.001) {
-          const axisX = rotX / angle;
-          const axisY = rotY / angle;
-          targetBox.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
-        } else {
-          targetBox.setAttribute('rotation', '0 1 0 0');
-        }
+        vp.setAttribute('position', `${camX.toFixed(3)} ${camY.toFixed(3)} ${camZ.toFixed(3)}`);
 
-        log(`追従中 | 顔位置: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)} | 傾き角度: ${angle.toFixed(2)} rad`);
+        // 3. カメラの向き（視線）は常に「画面中央の箱（0,0,0）」を注視するように設定
+        // （これにより画面枠の四隅と景色の消失点が物理的に正しくリンクします）
+        const angleY = -Math.atan2(camX, camZ);
+        const angleX =  Math.atan2(camY, camZ);
+        
+        // 簡易的な注視回転の適用
+        vp.setAttribute('orientation', `0 1 0 ${angleY.toFixed(3)}`);
+
+        log(`覗き込み中 | 目線位置: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
       } else {
-        log("顔を検出できません（カメラの正面に顔を向けてください）");
+        log("顔を検出できません");
       }
     });
 
