@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Anamorphic Portal Box</title>
+  <title>Anamorphic Portal Box Single Images</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
@@ -37,7 +37,7 @@
 <body>
 
   <div id="ui-overlay">
-    <h2>2D画像歪みアナモルフィック箱</h2>
+    <h2>デジタルフィギュア箱（各画像1枚適用）</h2>
     <div id="debug-log">画像を読み込んでいます...</div>
   </div>
 
@@ -52,25 +52,33 @@
     const ctx = canvas.getContext('2d');
     const videoElement = document.getElementById('webcam');
 
-    // 画像の読み込み
-    const imgNames = ['床.jpg', '奥壁.jpg', '左壁.jpg', '右壁.jpg', '天井壁.jpg'];
+    // ★ 5個の面に対して各1枚ずつ画像を指定
+    const imageSources = {
+      floor: '床.jpg',
+      back: '奥壁.jpg',
+      left: '左壁.jpg',
+      right: '右壁.jpg',
+      ceiling: '天井壁.jpg'
+    };
+
     const images = {};
     let loadedCount = 0;
+    const totalImages = Object.keys(imageSources).length;
 
-    imgNames.forEach(name => {
+    Object.keys(imageSources).forEach(key => {
       const img = new Image();
-      img.src = name;
+      img.src = imageSources[key];
       img.onload = () => {
         loadedCount++;
-        if (loadedCount === imgNames.length) {
-          log("画像読み込み完了。カメラ許可を待っています...");
+        if (loadedCount === totalImages) {
+          log("全5枚の画像を読み込みました。カメラの許可を待っています...");
           initCamera();
         }
       };
       img.onerror = () => {
-        log(`画像「${name}」の読み込みに失敗しました。ファイル名を確認してください。`);
+        log(`画像「${imageSources[key]}」の読み込みに失敗しました。HTMLと同じフォルダにあるか確認してください。`);
       };
-      images[name] = img;
+      images[key] = img;
     });
 
     function resizeCanvas() {
@@ -80,26 +88,23 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // アナモルフィック（遠近視点変換）描画処理
-    // 画面の4隅と、奥の壁の4頂点（消失点）を繋ぐ4つの四角形に画像を投影・湾曲描画
     function drawAnamorphicRoom(headX, headY) {
       const w = canvas.width;
       const h = canvas.height;
 
       ctx.clearRect(0, 0, w, h);
 
-      // 箱の奥行き感（画面サイズに対する奥の壁のサイズ割合）
+      // 奥の壁のデフォルトサイズ割合
       const depthRatio = 0.45;
 
-      // 顔の動きに応じた奥の壁（消失点）の中心位置
-      // 顔を左に動かすと奥壁は右にズレる（錯覚効果）
+      // 顔のトラッキング位置から計算する消失点（奥壁の中心）
       const backCenterX = w / 2 - headX * w * 0.8;
       const backCenterY = h / 2 - headY * h * 0.8;
 
       const backW = w * depthRatio;
       const backH = h * depthRatio;
 
-      // 奥の壁の4頂点座標 [TL, TR, BR, BL]
+      // 奥壁の4頂点 [TL, TR, BR, BL]
       const backWallQuad = [
         { x: backCenterX - backW / 2, y: backCenterY - backH / 2 },
         { x: backCenterX + backW / 2, y: backCenterY - backH / 2 },
@@ -107,7 +112,7 @@
         { x: backCenterX - backW / 2, y: backCenterY + backH / 2 }
       ];
 
-      // 画面（窓枠）の4頂点座標
+      // 画面端（窓枠）の4頂点
       const screenQuad = [
         { x: 0, y: 0 },
         { x: w, y: 0 },
@@ -115,51 +120,51 @@
         { x: 0, y: h }
       ];
 
-      // 1. 奥壁描画
-      drawQuadImage(images['奥壁.jpg'], backWallQuad);
+      // 1. 奥壁（1枚）
+      drawSingleImageQuad(images.back, backWallQuad);
 
-      // 2. 床描画 (画面下辺2点 と 奥壁下辺2点)
+      // 2. 床（1枚）
       const floorQuad = [
         backWallQuad[3],
         backWallQuad[2],
         screenQuad[2],
         screenQuad[3]
       ];
-      drawQuadImage(images['床.jpg'], floorQuad);
+      drawSingleImageQuad(images.floor, floorQuad);
 
-      // 3. 天井描画 (画面上辺2点 と 奥壁上辺2点)
+      // 3. 天井（1枚）
       const ceilingQuad = [
         screenQuad[0],
         screenQuad[1],
         backWallQuad[1],
         backWallQuad[0]
       ];
-      drawQuadImage(images['天井壁.jpg'], ceilingQuad);
+      drawSingleImageQuad(images.ceiling, ceilingQuad);
 
-      // 4. 左壁描画 (画面左辺2点 と 奥壁左辺2点)
+      // 4. 左壁（1枚）
       const leftQuad = [
         screenQuad[0],
         backWallQuad[0],
         backWallQuad[3],
         screenQuad[3]
       ];
-      drawQuadImage(images['左壁.jpg'], leftQuad);
+      drawSingleImageQuad(images.left, leftQuad);
 
-      // 5. 右壁描画 (画面右辺2点 と 奥壁右辺2点)
+      // 5. 右壁（1枚）
       const rightQuad = [
         backWallQuad[1],
         screenQuad[1],
         screenQuad[2],
         backWallQuad[2]
       ];
-      drawQuadImage(images['右壁.jpg'], rightQuad);
+      drawSingleImageQuad(images.right, rightQuad);
     }
 
-    // 4頂点自由変形（メッシュ分割による簡易テクスチャマッピング）
-    function drawQuadImage(img, quad) {
-      if (!img) return;
+    // 1枚の画像を4頂点の歪んだ領域（台形等）にフィットさせて描画
+    function drawSingleImageQuad(img, quad) {
+      if (!img || !img.complete) return;
       
-      const grid = 8; // 分割精度（大きくするとよりスムーズに湾曲）
+      const grid = 10; // 歪み補正の分割数
       
       for (let gy = 0; gy < grid; gy++) {
         for (let gx = 0; gx < grid; gx++) {
@@ -182,13 +187,11 @@
           ctx.closePath();
           ctx.clip();
 
-          // 三角形アフィン変換描画
           const sx = u0 * img.width;
           const sy = v0 * img.height;
           const sw = (u1 - u0) * img.width;
           const sh = (v1 - v0) * img.height;
 
-          // 近似バウンディングボックスに描画
           const minX = Math.min(p0.x, p1.x, p2.x, p3.x);
           const minY = Math.min(p0.y, p1.y, p2.y, p3.y);
           const maxX = Math.max(p0.x, p1.x, p2.x, p3.x);
@@ -206,7 +209,6 @@
       return { x, y };
     }
 
-    // MediaPipe Face Mesh
     let currentX = 0, currentY = 0;
     let targetX = 0, targetY = 0;
 
@@ -234,7 +236,6 @@
     });
 
     function render() {
-      // スムース補間（LERP）
       currentX += (targetX - currentX) * 0.15;
       currentY += (targetY - currentY) * 0.15;
 
