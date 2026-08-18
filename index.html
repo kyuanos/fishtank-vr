@@ -3,25 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM Portal Projection Box</title>
+  <title>Anamorphic Portal Box</title>
   
-  <script src="https://www.x3dom.org/download/x3dom.js"></script>
-  <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
   <style>
     * { box-sizing: border-box; }
     html, body {
       margin: 0; padding: 0;
-      width: 100%; height: 100%;
+      width: 100vw; height: 100vh;
       overflow: hidden;
       background: #000; color: #fff;
       font-family: sans-serif;
     }
-    x3d {
+    #stage {
       position: absolute; top: 0; left: 0;
       width: 100vw; height: 100vh;
-      border: none; margin: 0; padding: 0;
       display: block; z-index: 1;
     }
     #ui-overlay {
@@ -40,137 +37,179 @@
 <body>
 
   <div id="ui-overlay">
-    <h2>デジタルフィギュア箱（窓枠完全固定モデル）</h2>
-    <div id="debug-log">カメラ許可を待っています...</div>
+    <h2>2D画像歪みアナモルフィック箱</h2>
+    <div id="debug-log">画像を読み込んでいます...</div>
   </div>
 
-  <x3d id="x3dCanvas">
-    <scene>
-      <!-- カメラ位置 -->
-      <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
-      
-      <!-- ショーケース（箱）グループ：回転は一切行いません -->
-      <transform id="roomGroup" translation="0 0 0">
-        
-        <!-- 奥の壁 -->
-        <transform id="backWall">
-          <shape>
-            <appearance><material diffuseColor="0.1 0.1 0.15"></material></appearance>
-            <box id="backWallBox" size="1 1 0.001"></box>
-          </shape>
-        </transform>
-
-        <!-- 床 -->
-        <transform id="floor" rotation="1 0 0 -1.5708">
-          <shape>
-            <appearance><material diffuseColor="0.15 0.05 0.25" specularColor="0.8 0.2 0.8"></material></appearance>
-            <box id="floorBox" size="1 1 0.001"></box>
-          </shape>
-        </transform>
-
-        <!-- 天井 -->
-        <transform id="ceiling" rotation="1 0 0 1.5708">
-          <shape>
-            <appearance><material diffuseColor="0.05 0.05 0.1"></material></appearance>
-            <box id="ceilingBox" size="1 1 0.001"></box>
-          </shape>
-        </transform>
-
-        <!-- 左の壁 -->
-        <transform id="leftWall" rotation="0 1 0 1.5708">
-          <shape>
-            <appearance><material diffuseColor="0.08 0.08 0.12"></material></appearance>
-            <box id="leftWallBox" size="1 1 0.001"></box>
-          </shape>
-        </transform>
-
-        <!-- 右の壁 -->
-        <transform id="rightWall" rotation="0 1 0 -1.5708">
-          <shape>
-            <appearance><material diffuseColor="0.08 0.08 0.12"></material></appearance>
-            <box id="rightWallBox" size="1 1 0.001"></box>
-          </shape>
-        </transform>
-
-        <!-- 中央のフィギュア / オブジェクト -->
-        <transform id="targetBox" translation="0 0 0">
-          <shape>
-            <appearance>
-              <material diffuseColor="0.2 0.8 1.0" specularColor="0.8 0.8 0.8"></material>
-            </appearance>
-            <box id="objectShape" size="1 1 1"></box>
-          </shape>
-        </transform>
-
-      </transform>
-    </scene>
-  </x3d>
-
+  <canvas id="stage"></canvas>
   <video id="webcam" autoplay playsinline style="display:none;"></video>
 
   <script>
     const logElem = document.getElementById('debug-log');
     function log(msg) { logElem.innerText = msg; }
 
-    const vp = document.getElementById('vp');
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
     const videoElement = document.getElementById('webcam');
 
-    // 壁・床ノード要素
-    const backWall = document.getElementById('backWall');
-    const backWallBox = document.getElementById('backWallBox');
-    const floor = document.getElementById('floor');
-    const floorBox = document.getElementById('floorBox');
-    const ceiling = document.getElementById('ceiling');
-    const ceilingBox = document.getElementById('ceilingBox');
-    const leftWall = document.getElementById('leftWall');
-    const leftWallBox = document.getElementById('leftWallBox');
-    const rightWall = document.getElementById('rightWall');
-    const rightWallBox = document.getElementById('rightWallBox');
-    const targetBox = document.getElementById('targetBox');
-    const objectShape = document.getElementById('objectShape');
+    // 画像の読み込み
+    const imgNames = ['床.jpg', '奥壁.jpg', '左壁.jpg', '右壁.jpg', '天井壁.jpg'];
+    const images = {};
+    let loadedCount = 0;
 
-    const baseCameraZ = 5;
+    imgNames.forEach(name => {
+      const img = new Image();
+      img.src = name;
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === imgNames.length) {
+          log("画像読み込み完了。カメラ許可を待っています...");
+          initCamera();
+        }
+      };
+      img.onerror = () => {
+        log(`画像「${name}」の読み込みに失敗しました。ファイル名を確認してください。`);
+      };
+      images[name] = img;
+    });
 
-    // -------------------------------------------------------------
-    // 画面サイズにぴったり合わせた箱のサイズ設定
-    // -------------------------------------------------------------
-    function updateRoomSize() {
-      const fov = parseFloat(vp.getAttribute('fieldOfView')) || 0.785;
-      const aspect = window.innerWidth / window.innerHeight;
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-      // 画面（Z=0）における窓枠サイズ
-      const roomHeight = 2 * Math.tan(fov / 2) * baseCameraZ;
-      const roomWidth = roomHeight * aspect;
-      const roomDepth = roomHeight * 0.8;
-      const wallThickness = 0.001;
+    // アナモルフィック（遠近視点変換）描画処理
+    // 画面の4隅と、奥の壁の4頂点（消失点）を繋ぐ4つの四角形に画像を投影・湾曲描画
+    function drawAnamorphicRoom(headX, headY) {
+      const w = canvas.width;
+      const h = canvas.height;
 
-      // 箱の前フチを Z=0（画面の位置）に合わせる
-      backWallBox.setAttribute('size', `${roomWidth} ${roomHeight} ${wallThickness}`);
-      backWall.setAttribute('translation', `0 0 ${-roomDepth}`);
+      ctx.clearRect(0, 0, w, h);
 
-      floorBox.setAttribute('size', `${roomWidth} ${roomDepth} ${wallThickness}`);
-      floor.setAttribute('translation', `0 ${-roomHeight / 2} ${-roomDepth / 2}`);
+      // 箱の奥行き感（画面サイズに対する奥の壁のサイズ割合）
+      const depthRatio = 0.45;
 
-      ceilingBox.setAttribute('size', `${roomWidth} ${roomDepth} ${wallThickness}`);
-      ceiling.setAttribute('translation', `0 ${roomHeight / 2} ${-roomDepth / 2}`);
+      // 顔の動きに応じた奥の壁（消失点）の中心位置
+      // 顔を左に動かすと奥壁は右にズレる（錯覚効果）
+      const backCenterX = w / 2 - headX * w * 0.8;
+      const backCenterY = h / 2 - headY * h * 0.8;
 
-      leftWallBox.setAttribute('size', `${roomDepth} ${roomHeight} ${wallThickness}`);
-      leftWall.setAttribute('translation', `${-roomWidth / 2} 0 ${-roomDepth / 2}`);
+      const backW = w * depthRatio;
+      const backH = h * depthRatio;
 
-      rightWallBox.setAttribute('size', `${roomDepth} ${roomHeight} ${wallThickness}`);
-      rightWall.setAttribute('translation', `${roomWidth / 2} 0 ${-roomDepth / 2}`);
+      // 奥の壁の4頂点座標 [TL, TR, BR, BL]
+      const backWallQuad = [
+        { x: backCenterX - backW / 2, y: backCenterY - backH / 2 },
+        { x: backCenterX + backW / 2, y: backCenterY - backH / 2 },
+        { x: backCenterX + backW / 2, y: backCenterY + backH / 2 },
+        { x: backCenterX - backW / 2, y: backCenterY + backH / 2 }
+      ];
 
-      // フィギュアのサイズ・位置
-      const objScale = Math.min(roomWidth, roomHeight) * 0.45;
-      objectShape.setAttribute('size', `${objScale} ${objScale * 1.3} ${objScale}`);
-      targetBox.setAttribute('translation', `0 ${-roomHeight / 2 + (objScale * 1.3) / 2} ${-roomDepth / 2}`);
+      // 画面（窓枠）の4頂点座標
+      const screenQuad = [
+        { x: 0, y: 0 },
+        { x: w, y: 0 },
+        { x: w, y: h },
+        { x: 0, y: h }
+      ];
+
+      // 1. 奥壁描画
+      drawQuadImage(images['奥壁.jpg'], backWallQuad);
+
+      // 2. 床描画 (画面下辺2点 と 奥壁下辺2点)
+      const floorQuad = [
+        backWallQuad[3],
+        backWallQuad[2],
+        screenQuad[2],
+        screenQuad[3]
+      ];
+      drawQuadImage(images['床.jpg'], floorQuad);
+
+      // 3. 天井描画 (画面上辺2点 と 奥壁上辺2点)
+      const ceilingQuad = [
+        screenQuad[0],
+        screenQuad[1],
+        backWallQuad[1],
+        backWallQuad[0]
+      ];
+      drawQuadImage(images['天井壁.jpg'], ceilingQuad);
+
+      // 4. 左壁描画 (画面左辺2点 と 奥壁左辺2点)
+      const leftQuad = [
+        screenQuad[0],
+        backWallQuad[0],
+        backWallQuad[3],
+        screenQuad[3]
+      ];
+      drawQuadImage(images['左壁.jpg'], leftQuad);
+
+      // 5. 右壁描画 (画面右辺2点 と 奥壁右辺2点)
+      const rightQuad = [
+        backWallQuad[1],
+        screenQuad[1],
+        screenQuad[2],
+        backWallQuad[2]
+      ];
+      drawQuadImage(images['右壁.jpg'], rightQuad);
     }
 
-    window.addEventListener('resize', updateRoomSize);
-    updateRoomSize();
+    // 4頂点自由変形（メッシュ分割による簡易テクスチャマッピング）
+    function drawQuadImage(img, quad) {
+      if (!img) return;
+      
+      const grid = 8; // 分割精度（大きくするとよりスムーズに湾曲）
+      
+      for (let gy = 0; gy < grid; gy++) {
+        for (let gx = 0; gx < grid; gx++) {
+          const u0 = gx / grid;
+          const v0 = gy / grid;
+          const u1 = (gx + 1) / grid;
+          const v1 = (gy + 1) / grid;
+
+          const p0 = bilinearInterpolate(quad, u0, v0);
+          const p1 = bilinearInterpolate(quad, u1, v0);
+          const p2 = bilinearInterpolate(quad, u1, v1);
+          const p3 = bilinearInterpolate(quad, u0, v1);
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.lineTo(p3.x, p3.y);
+          ctx.closePath();
+          ctx.clip();
+
+          // 三角形アフィン変換描画
+          const sx = u0 * img.width;
+          const sy = v0 * img.height;
+          const sw = (u1 - u0) * img.width;
+          const sh = (v1 - v0) * img.height;
+
+          // 近似バウンディングボックスに描画
+          const minX = Math.min(p0.x, p1.x, p2.x, p3.x);
+          const minY = Math.min(p0.y, p1.y, p2.y, p3.y);
+          const maxX = Math.max(p0.x, p1.x, p2.x, p3.x);
+          const maxY = Math.max(p0.y, p1.y, p2.y, p3.y);
+
+          ctx.drawImage(img, sx, sy, sw, sh, minX - 0.5, minY - 0.5, (maxX - minX) + 1, (maxY - minY) + 1);
+          ctx.restore();
+        }
+      }
+    }
+
+    function bilinearInterpolate(quad, u, v) {
+      const x = (1 - u) * (1 - v) * quad[0].x + u * (1 - v) * quad[1].x + u * v * quad[2].x + (1 - u) * v * quad[3].x;
+      const y = (1 - u) * (1 - v) * quad[0].y + u * (1 - v) * quad[1].y + u * v * quad[2].y + (1 - u) * v * quad[3].y;
+      return { x, y };
+    }
 
     // MediaPipe Face Mesh
-    let frameCount = 0;
+    let currentX = 0, currentY = 0;
+    let targetX = 0, targetY = 0;
+
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
@@ -183,49 +222,27 @@
     });
 
     faceMesh.onResults((results) => {
-      frameCount++;
-
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        const offsetX = (nose.x - 0.5);
-        const offsetY = (nose.y - 0.5);
+        targetX = (nose.x - 0.5);
+        targetY = (nose.y - 0.5);
 
-        // 視差移動の強度
-        const moveScale = 3.5;
-
-        // ★ここが最大のポイント！
-        // 箱を回転させるのではなく、カメラの「位置(Position)」と「注視(Orientation)」を変更します。
-        // 箱の前フチ（Z=0）は常に画面の端と密着固定されたまま、覗き込んだ角度だけ奥がズレて見えます。
-        const camX =  offsetX * moveScale;
-        const camY = -offsetY * moveScale;
-        const camZ = baseCameraZ;
-
-        // 1. カメラを頭の位置へ移動
-        vp.setAttribute('position', `${camX.toFixed(3)} ${camY.toFixed(3)} ${camZ.toFixed(3)}`);
-
-        // 2. カメラの向きを画面中央（0,0,0）に向ける
-        const rotY = -Math.atan2(camX, camZ);
-        const rotX =  Math.atan2(camY, Math.sqrt(camX * camX + camZ * camZ));
-        const angle = Math.sqrt(rotX * rotX + rotY * rotY);
-
-        if (angle > 0.001) {
-          const axisX = rotX / angle;
-          const axisY = rotY / angle;
-          vp.setAttribute('orientation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
-        } else {
-          vp.setAttribute('orientation', '0 1 0 0');
-        }
-
-        log(`[#${frameCount}] 追従中 | 視点移動: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
-      } else {
-        log(`[#${frameCount}] 顔を検出できません`);
+        log(`追従中 | X: ${targetX.toFixed(2)}, Y: ${targetY.toFixed(2)}`);
       }
     });
 
-    // Webカメラ起動
-    async function startCamera() {
+    function render() {
+      // スムース補間（LERP）
+      currentX += (targetX - currentX) * 0.15;
+      currentY += (targetY - currentY) * 0.15;
+
+      drawAnamorphicRoom(currentX, currentY);
+      requestAnimationFrame(render);
+    }
+
+    async function initCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: "user" }
@@ -234,6 +251,7 @@
         videoElement.onloadedmetadata = () => {
           videoElement.play();
           processVideoFrame();
+          render();
         };
       } catch (err) {
         log("カメラ起動失敗: " + err.message);
@@ -244,14 +262,10 @@
       if (videoElement.readyState >= 2 && !videoElement.paused && !videoElement.ended) {
         try {
           await faceMesh.send({ image: videoElement });
-        } catch (e) {
-          console.error("FaceMeshエラー:", e);
-        }
+        } catch (e) {}
       }
       requestAnimationFrame(processVideoFrame);
     }
-
-    startCamera();
   </script>
 </body>
 </html>
