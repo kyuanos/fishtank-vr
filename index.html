@@ -10,9 +10,15 @@
     #ui {
       position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
       color: #6bffb8; background: rgba(0,0,0,0.8); padding: 8px 16px;
-      border-radius: 8px; font-family: sans-serif; font-size: 0.8rem; pointer-events: none;
-      z-index: 10;
+      border-radius: 8px; font-family: sans-serif; font-size: 0.8rem;
+      z-index: 10; display: flex; align-items: center; gap: 10px;
     }
+    #toggle-btn {
+      background: #6bffb8; color: #000; border: none;
+      padding: 4px 10px; border-radius: 4px; font-weight: bold;
+      cursor: pointer; font-size: 0.75rem;
+    }
+    #toggle-btn:active { opacity: 0.8; }
   </style>
   <!-- Three.js & MediaPipe -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -20,13 +26,29 @@
 </head>
 <body>
 
-  <div id="ui">カメラ・画像を読み込んでいます...</div>
+  <div id="ui">
+    <span id="log-text">カメラ・画像を読み込んでいます...</span>
+    <button id="toggle-btn">回転: ON</button>
+  </div>
+
   <canvas id="stage"></canvas>
   <video id="webcam" autoplay playsinline style="display:none;"></video>
 
   <script>
-    const logElem = document.getElementById('ui');
+    const logElem = document.getElementById('log-text');
+    const toggleBtn = document.getElementById('toggle-btn');
     const videoElement = document.getElementById('webcam');
+
+    // ★ 回転のON/OFF状態管理フラグ
+    let isRotating = true;
+
+    function toggleRotation(e) {
+      if (e) e.stopPropagation(); // イベントのバブリング防止
+      isRotating = !isRotating;
+      toggleBtn.innerText = `回転: ${isRotating ? 'ON' : 'OFF'}`;
+    }
+
+    toggleBtn.addEventListener('click', toggleRotation);
 
     // 1. Scene & Renderer Setup
     const scene = new THREE.Scene();
@@ -39,14 +61,14 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // ライティング（内部のキューブを綺麗に見せるため）
+    // ライティング
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
     dirLight.position.set(2, 4, 3);
     scene.add(dirLight);
 
-    // 2. Load Textures (部屋用)
+    // 2. Load Textures
     const textureLoader = new THREE.TextureLoader();
     const roomMaterials = [
       new THREE.MeshBasicMaterial({ map: textureLoader.load('右壁２.jpg'), side: THREE.BackSide }),
@@ -58,11 +80,11 @@
     ];
 
     let room;
-    let cubeMesh; // ★ 部屋の中の「正方形キューブ」
+    let cubeMesh;
     let screenWidth = 0;
     let screenHeight = 0;
     
-    const depthRatio = 0.35; // 奥行き倍率
+    const depthRatio = 0.35;
 
     // 3. 部屋と内部キューブの生成
     function createSceneObjects() {
@@ -73,21 +95,19 @@
       screenWidth = screenHeight * aspect;
       const roomDepth = screenHeight * depthRatio;
 
-      // 古いオブジェクトの破棄
       if (room) scene.remove(room);
       if (cubeMesh) scene.remove(cubeMesh);
 
-      // --- ① 外側の部屋（背景） ---
+      // ① 部屋（背景）
       const roomGeo = new THREE.BoxGeometry(screenWidth, screenHeight, roomDepth);
       room = new THREE.Mesh(roomGeo, roomMaterials);
       room.position.set(0, 0, -roomDepth / 2);
       scene.add(room);
 
-      // --- ② 部屋の中の正方形キューブ（物体） ---
-      const cubeSize = Math.min(screenWidth, screenHeight) * 0.35; // 画面幅に合わせた正方形サイズ
+      // ② 正方形キューブ
+      const cubeSize = Math.min(screenWidth, screenHeight) * 0.35;
       const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
       
-      // キューブ用のマテリアル（単色またはテクスチャ）
       const cubeMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x44aa88, 
         roughness: 0.4,
@@ -95,9 +115,7 @@
       });
       
       cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-      // 部屋の中央〜少し奥に配置
-      cubeMesh.position.set(0, -screenHeight*0.1, -roomDepth * 0.5);
-      // 少し角度をつけると立体感が強調されます
+      cubeMesh.position.set(0, -screenHeight * 0.1, -roomDepth * 0.5);
       cubeMesh.rotation.y = Math.PI / 6; 
       scene.add(cubeMesh);
     }
@@ -112,7 +130,7 @@
       createSceneObjects();
     });
 
-    // 4. Off-Axis Projection（視点追従）
+    // 4. Off-Axis Projection
     function setOffAxisProjection(headX, headY) {
       const camX = -headX * 4;
       const camY = -headY * 4;
@@ -162,7 +180,6 @@
         videoElement.onloadedmetadata = () => {
           videoElement.play();
           processVideo();
-          render();
         };
       } catch (e) {
         logElem.innerText = "カメラエラー: " + e.message;
@@ -182,15 +199,18 @@
 
       setOffAxisProjection(currentX, currentY);
 
-      // キューブを少しだけ自転させて動きをつけることも可能
-      if (cubeMesh) {
-        cubeMesh.rotation.y += 0.005; // 回転させたい場合はコメントアウト解除
+      // ★ ONの時だけキューブを回転させる
+      if (cubeMesh && isRotating) {
+        cubeMesh.rotation.y += 0.01;
+        cubeMesh.rotation.x += 0.005;
       }
 
       renderer.render(scene, camera);
       requestAnimationFrame(render);
     }
 
+    // 描画ループとカメラの起動
+    render();
     initCamera();
   </script>
 </body>
