@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Anamorphic Portal Box (WebGL)</title>
+  <title>Anamorphic Portal Box (Aspect Fitted)</title>
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     #stage { width: 100vw; height: 100vh; display: block; }
@@ -11,6 +11,7 @@
       position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
       color: #6bffb8; background: rgba(0,0,0,0.8); padding: 8px 16px;
       border-radius: 8px; font-family: sans-serif; font-size: 0.8rem; pointer-events: none;
+      z-index: 10;
     }
   </style>
   <!-- Three.js & MediaPipe -->
@@ -19,7 +20,7 @@
 </head>
 <body>
 
-  <div id="ui" id="log">カメラ・画像を読み込んでいます...</div>
+  <div id="ui">カメラ・画像を読み込んでいます...</div>
   <canvas id="stage"></canvas>
   <video id="webcam" autoplay playsinline style="display:none;"></video>
 
@@ -44,33 +45,52 @@
       new THREE.MeshBasicMaterial({ map: textureLoader.load('天井壁.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('床.jpg'), side: THREE.BackSide }),
       new THREE.MeshBasicMaterial({ map: textureLoader.load('奥壁.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide }) // 手前（空き）
+      new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide }) // 手前（窓枠部分）
     ];
 
-    // 箱（Room）を作成
-    const boxGeo = new THREE.BoxGeometry(4, 4, 4);
-    const room = new THREE.Mesh(boxGeo, materials);
-    room.position.z = -2; // 画面奥に配置
-    scene.add(room);
+    // 画面のアス比に合わせて箱の形状を作成する関数
+    let room;
+    const depth = 4; // 箱の奥行き
+
+    function createOrUpdateRoom() {
+      const aspect = window.innerWidth / window.innerHeight;
+      const height = 4;         // 高さ固定
+      const width = height * aspect; // 画面のアスペクト比に合わせる
+
+      if (room) {
+        scene.remove(room);
+        room.geometry.dispose();
+      }
+
+      const boxGeo = new THREE.BoxGeometry(width, height, depth);
+      room = new THREE.Mesh(boxGeo, materials);
+      room.position.z = -depth / 2; // 画面の手前枠を z=0 に配置
+      scene.add(room);
+    }
+
+    createOrUpdateRoom();
 
     // ウィンドウサイズ変更対応
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(w, h);
+      createOrUpdateRoom();
     });
 
-    // 3. Off-Center Perspective Projection (アナモルフィック錯覚計算)
+    // 3. 視点移動計算（左右の移動方向を反転補正）
     let currentX = 0, currentY = 0;
     let targetX = 0, targetY = 0;
 
     function updateProjection(headX, headY) {
-      // カメラの位置を顔に合わせて動かす
-      camera.position.x = headX * 3;
-      camera.position.y = -headY * 3;
+      // ★ X軸の正負を反転させて左右の動きを正常化
+      camera.position.x = -headX * 4;
+      camera.position.y = -headY * 4;
 
-      // 視点を常に箱の中心（または画面の枠）に向け直す
-      camera.lookAt(0, 0, -2);
+      // 視点を箱の中心（手前窓枠の中心 z=0）に向ける
+      camera.lookAt(0, 0, -depth / 2);
     }
 
     // 4. Face Tracking Setup
