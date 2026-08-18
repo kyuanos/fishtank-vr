@@ -129,45 +129,40 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
+        // -------------------------------------------------------------
         // 顔の画面中央からのズレ量 (-0.5 〜 0.5)
+        // -------------------------------------------------------------
         const offsetX = (nose.x - 0.5);
         const offsetY = (nose.y - 0.5);
 
-        // 覗き込みの移動強度（大きくするとより大きく視点が移動します）
-        const eyeMoveScale = 2.5;
+        // 覗き込みの感度（大きくすると少しの顔移動で側面が大きく見えます）
+        const sensitivity = 1.0;
 
-        // 1. 物体は中央で完全固定（回さない）
-        targetBox.setAttribute('rotation', '0 1 0 0');
-
-        // 2. 目線（カメラ）の位置を計算
-        const camX =  offsetX * eyeMoveScale;
-        const camY = -offsetY * eyeMoveScale;
+        // 1. カメラの位置・向きは画面正面中央で完全固定！
+        // （これで物体が画面外に逃げることが物理的に不可能になります）
         const camZ = typeof baseCameraZ !== 'undefined' ? baseCameraZ : 5;
+        vp.setAttribute('position', `0 0 ${camZ.toFixed(3)}`);
+        vp.setAttribute('orientation', '0 1 0 0');
 
-        vp.setAttribute('position', `${camX.toFixed(3)} ${camY.toFixed(3)} ${camZ.toFixed(3)}`);
+        // 2. 視差（顔の位置）に合わせて「その場」で側面が見えるように軸回転を計算
+        // 右から覗き込む(offsetX > 0) ➔ 物体の右側面が見えるようにY軸回転
+        // 上から覗き込む(offsetY < 0) ➔ 物体の上面が見えるようにX軸回転
+        const rotY =  offsetX * sensitivity; 
+        const rotX = -offsetY * sensitivity;
 
-        // -------------------------------------------------------------
-        // ★ここを修正！
-        // カメラがズレた分だけ「中央（0,0,0）」を向き直す回転角度を計算
-        // -------------------------------------------------------------
-        // Y軸回転（左右の注視）
-        const rotY = -Math.atan2(camX, camZ);
-        // X軸回転（上下の注視）
-        const rotX =  Math.atan2(camY, Math.sqrt(camX * camX + camZ * camZ));
-
-        // 回転の合成角
         const angle = Math.sqrt(rotX * rotX + rotY * rotY);
 
         if (angle > 0.001) {
           const axisX = rotX / angle;
           const axisY = rotY / angle;
-          // 中央を向くようにカメラの向きを更新
-          vp.setAttribute('orientation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
+          
+          // 物体を画面中央（0,0,0）を中心にして傾ける
+          targetBox.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
         } else {
-          vp.setAttribute('orientation', '0 1 0 0');
+          targetBox.setAttribute('rotation', '0 1 0 0');
         }
 
-        log(`[#${frameCount}] 覗き込み中 | 目線: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
+        log(`[#${frameCount}] 覗き込み中 | 顔オフセット: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)}`);
       } else {
         log(`[#${frameCount}] 顔を検出できません`);
       }
