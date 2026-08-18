@@ -158,19 +158,35 @@
       }
     });
 
-    // Webカメラ起動
+    // Webカメラ起動（エラー詳細ログ表示版）
     async function startCamera() {
+      log("カメラを初期化中...");
       try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("このブラウザまたは環境（http/file）ではカメラがサポートされていません。");
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: "user" }
         });
+        
         videoElement.srcObject = stream;
+        
+        // メタデータロード完了時の処理
         videoElement.onloadedmetadata = () => {
+          log("カメラ読み込み成功！処理を開始します...");
           videoElement.play();
           processVideoFrame();
         };
+
+        // playがブロックされた場合の対策
+        videoElement.play().catch(e => {
+          log("ビデオ再生エラー: " + e.message);
+        });
+
       } catch (err) {
-        log("カメラ起動失敗: " + err.message);
+        log("【エラー】" + err.name + ": " + err.message);
+        console.error(err);
       }
     }
 
