@@ -129,31 +129,47 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        // 顔のズレ量 (-0.5 〜 0.5)
+        // 顔の画面中央からのズレ量 (-0.5 〜 0.5)
         const offsetX = (nose.x - 0.5);
         const offsetY = (nose.y - 0.5);
 
-        // 覗き込みの移動強度
-        const eyeMoveScale = 3.0;
+        // 覗き込みの移動強度（大きくするとより大きく視点が移動します）
+        const eyeMoveScale = 2.5;
 
-        // 物体は固定
+        // 1. 物体は中央で完全固定（回さない）
         targetBox.setAttribute('rotation', '0 1 0 0');
 
-        // カメラ（目線）の位置を変更
+        // 2. 目線（カメラ）の位置を計算
         const camX =  offsetX * eyeMoveScale;
         const camY = -offsetY * eyeMoveScale;
         const camZ = typeof baseCameraZ !== 'undefined' ? baseCameraZ : 5;
 
         vp.setAttribute('position', `${camX.toFixed(3)} ${camY.toFixed(3)} ${camZ.toFixed(3)}`);
 
-        // 注視点調整
-        const angleY = -Math.atan2(camX, camZ);
-        vp.setAttribute('orientation', `0 1 0 ${angleY.toFixed(3)}`);
+        // -------------------------------------------------------------
+        // ★ここを修正！
+        // カメラがズレた分だけ「中央（0,0,0）」を向き直す回転角度を計算
+        // -------------------------------------------------------------
+        // Y軸回転（左右の注視）
+        const rotY = -Math.atan2(camX, camZ);
+        // X軸回転（上下の注視）
+        const rotX =  Math.atan2(camY, Math.sqrt(camX * camX + camZ * camZ));
 
-        // カウント（#）を付けてログを出力（数字が増えていれば認識がリアルタイムに動いています）
-        log(`[#${frameCount}] 追従中 | 目線: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
+        // 回転の合成角
+        const angle = Math.sqrt(rotX * rotX + rotY * rotY);
+
+        if (angle > 0.001) {
+          const axisX = rotX / angle;
+          const axisY = rotY / angle;
+          // 中央を向くようにカメラの向きを更新
+          vp.setAttribute('orientation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
+        } else {
+          vp.setAttribute('orientation', '0 1 0 0');
+        }
+
+        log(`[#${frameCount}] 覗き込み中 | 目線: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
       } else {
-        log(`[#${frameCount}] 顔を検出できません（カメラの正面を向いてください）`);
+        log(`[#${frameCount}] 顔を検出できません`);
       }
     });
 
