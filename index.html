@@ -40,7 +40,7 @@
 <body>
 
   <div id="ui-overlay">
-    <h2>デジタルフィギュア箱（ホログラム表示）</h2>
+    <h2>デジタルフィギュア箱（画面ピッタリ表示）</h2>
     <div id="debug-log">カメラ許可を待っています...</div>
   </div>
 
@@ -48,48 +48,56 @@
     <scene>
       <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
-      <!-- 全体を格納するショーケース（箱）グループ -->
+      <!-- ショーケース（箱）グループ -->
       <transform id="roomGroup" rotation="0 1 0 0" translation="0 0 0">
         
-        <!-- 【奥の壁】 -->
-        <transform translation="0 0 -2">
+        <!-- 奥の壁 -->
+        <transform id="backWall">
           <shape>
             <appearance><material diffuseColor="0.1 0.1 0.15"></material></appearance>
-            <box size="4 4 0.1"></box>
+            <box id="backWallBox" size="1 1 0.1"></box>
           </shape>
         </transform>
 
-        <!-- 【床（魔法陣風・グリッド風パターン）】 -->
-        <transform translation="0 -2 0" rotation="1 0 0 -1.5708">
+        <!-- 床 -->
+        <transform id="floor" rotation="1 0 0 -1.5708">
           <shape>
             <appearance><material diffuseColor="0.15 0.05 0.25" specularColor="0.8 0.2 0.8"></material></appearance>
-            <box size="4 4 0.1"></box>
+            <box id="floorBox" size="1 1 0.1"></box>
           </shape>
         </transform>
 
-        <!-- 【左の壁】 -->
-        <transform translation="-2 0 0" rotation="0 1 0 1.5708">
+        <!-- 天井 -->
+        <transform id="ceiling" rotation="1 0 0 1.5708">
+          <shape>
+            <appearance><material diffuseColor="0.05 0.05 0.1"></material></appearance>
+            <box id="ceilingBox" size="1 1 0.1"></box>
+          </shape>
+        </transform>
+
+        <!-- 左の壁 -->
+        <transform id="leftWall" rotation="0 1 0 1.5708">
           <shape>
             <appearance><material diffuseColor="0.08 0.08 0.12"></material></appearance>
-            <box size="4 4 0.1"></box>
+            <box id="leftWallBox" size="1 1 0.1"></box>
           </shape>
         </transform>
 
-        <!-- 【右の壁】 -->
-        <transform translation="2 0 0" rotation="0 1 0 -1.5708">
+        <!-- 右の壁 -->
+        <transform id="rightWall" rotation="0 1 0 -1.5708">
           <shape>
             <appearance><material diffuseColor="0.08 0.08 0.12"></material></appearance>
-            <box size="4 4 0.1"></box>
+            <box id="rightWallBox" size="1 1 0.1"></box>
           </shape>
         </transform>
 
-        <!-- 【中央のフィギュア / オブジェクト】 -->
-        <transform id="targetBox" translation="0 -0.5 0">
+        <!-- 中央のフィギュア / オブジェクト -->
+        <transform id="targetBox" translation="0 0 0">
           <shape>
             <appearance>
               <material diffuseColor="0.2 0.8 1.0" specularColor="0.8 0.8 0.8"></material>
             </appearance>
-            <box size="1.5 2.2 1.5"></box>
+            <box id="objectShape" size="1 1 1"></box>
           </shape>
         </transform>
 
@@ -107,9 +115,66 @@
     const roomGroup = document.getElementById('roomGroup');
     const videoElement = document.getElementById('webcam');
 
-    let frameCount = 0;
+    // ノード要素
+    const backWall = document.getElementById('backWall');
+    const backWallBox = document.getElementById('backWallBox');
+    const floor = document.getElementById('floor');
+    const floorBox = document.getElementById('floorBox');
+    const ceiling = document.getElementById('ceiling');
+    const ceilingBox = document.getElementById('ceilingBox');
+    const leftWall = document.getElementById('leftWall');
+    const leftWallBox = document.getElementById('leftWallBox');
+    const rightWall = document.getElementById('rightWall');
+    const rightWallBox = document.getElementById('rightWallBox');
+    const targetBox = document.getElementById('targetBox');
+    const objectShape = document.getElementById('objectShape');
+
+    // -------------------------------------------------------------
+    // 画面サイズに応じて「箱の縦横高さ」を自動ジャストフィットさせる処理
+    // -------------------------------------------------------------
+    function updateRoomSize() {
+      const cameraZ = 5;
+      const fov = parseFloat(vp.getAttribute('fieldOfView')) || 0.785; // 45度
+      const aspect = window.innerWidth / window.innerHeight;
+
+      // カメラから画面開口部（Z=0）における見える視野幅と高さ
+      const roomHeight = 2 * Math.tan(fov / 2) * cameraZ;
+      const roomWidth = roomHeight * aspect;
+      // 奥行きは画面幅・高さに合わせた使いやすい深さに設定（画面の高さと同程度）
+      const roomDepth = roomHeight * 0.8;
+
+      // 1. 各壁のサイズと位置を更新（画面の四隅にぴったり密着）
+      // 奥の壁
+      backWallBox.setAttribute('size', `${roomWidth} ${roomHeight} 0.1`);
+      backWall.setAttribute('translation', `0 0 ${-roomDepth}`);
+
+      // 床
+      floorBox.setAttribute('size', `${roomWidth} ${roomDepth} 0.1`);
+      floor.setAttribute('translation', `0 ${-roomHeight / 2} ${-roomDepth / 2}`);
+
+      // 天井
+      ceilingBox.setAttribute('size', `${roomWidth} ${roomDepth} 0.1`);
+      ceiling.setAttribute('translation', `0 ${roomHeight / 2} ${-roomDepth / 2}`);
+
+      // 左の壁
+      leftWallBox.setAttribute('size', `${roomDepth} ${roomHeight} 0.1`);
+      leftWall.setAttribute('translation', `${-roomWidth / 2} 0 ${-roomDepth / 2}`);
+
+      // 右の壁
+      rightWallBox.setAttribute('size', `${roomDepth} ${roomHeight} 0.1`);
+      rightWall.setAttribute('translation', `${roomWidth / 2} 0 ${-roomDepth / 2}`);
+
+      // 2. 中央のフィギュアの大きさ・位置も箱に合わせて調整
+      const objScale = Math.min(roomWidth, roomHeight) * 0.45;
+      objectShape.setAttribute('size', `${objScale} ${objScale * 1.3} ${objScale}`);
+      targetBox.setAttribute('translation', `0 ${-roomHeight / 2 + (objScale * 1.3) / 2} ${-roomDepth / 2}`);
+    }
+
+    window.addEventListener('resize', updateRoomSize);
+    updateRoomSize();
 
     // MediaPipe Face Mesh
+    let frameCount = 0;
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
@@ -128,15 +193,11 @@
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        // 顔の画面中央からのズレ (-0.5 〜 0.5)
         const offsetX = (nose.x - 0.5);
         const offsetY = (nose.y - 0.5);
 
-        // ★パースペクティブ（視差）感度
-        const sensitivity = 1.3;
+        const sensitivity = 1.2;
 
-        // 顔の動きに合わせて「箱全体」を連動傾斜させることで、
-        // 画面枠を「窓」とした奥行き（床・奥壁・側面の変化）を生み出します
         const rotX = -offsetY * sensitivity; 
         const rotY =  offsetX * sensitivity; 
 
@@ -150,7 +211,7 @@
           roomGroup.setAttribute('rotation', '0 1 0 0');
         }
 
-        log(`[#${frameCount}] 追従中 | 覗き込み位置: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)}`);
+        log(`[#${frameCount}] 追従中 | 視線オフセット: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)}`);
       } else {
         log(`[#${frameCount}] 顔を検出できません`);
       }
