@@ -119,68 +119,44 @@
       minTrackingConfidence: 0.5
     });
 
-    // 追従ログ用カウンター（動いているか視覚的に確認するため）
-    let frameCount = 0;
-
     faceMesh.onResults((results) => {
-      frameCount++;
-
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        // -------------------------------------------------------------
-        // 顔の画面中央からのズレ量 (-0.5 〜 0.5)
-        // -------------------------------------------------------------
         const offsetX = (nose.x - 0.5);
         const offsetY = (nose.y - 0.5);
 
-        // 覗き込みの感度（大きくすると少しの顔移動で側面が大きく見えます）
-        const sensitivity = 1.0;
+        const sensitivity = 1.2;
 
-        // 1. カメラの位置・向きは画面正面中央で完全固定！
-        // （これで物体が画面外に逃げることが物理的に不可能になります）
-        const camZ = typeof baseCameraZ !== 'undefined' ? baseCameraZ : 5;
-        vp.setAttribute('position', `0 0 ${camZ.toFixed(3)}`);
-        vp.setAttribute('orientation', '0 1 0 0');
-
-        // 2. 視差（顔の位置）に合わせて「その場」で側面が見えるように軸回転を計算
-        // 右から覗き込む(offsetX > 0) ➔ 物体の右側面が見えるようにY軸回転
-        // 上から覗き込む(offsetY < 0) ➔ 物体の上面が見えるようにX軸回転
+        const rotX = -offsetY * sensitivity; 
         const rotY =  offsetX * sensitivity; 
-        const rotX = -offsetY * sensitivity;
 
         const angle = Math.sqrt(rotX * rotX + rotY * rotY);
 
         if (angle > 0.001) {
           const axisX = rotX / angle;
           const axisY = rotY / angle;
-          
-          // 物体を画面中央（0,0,0）を中心にして傾ける
           targetBox.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
         } else {
           targetBox.setAttribute('rotation', '0 1 0 0');
         }
 
-        log(`[#${frameCount}] 覗き込み中 | 顔オフセット: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)}`);
+        log(`追従中 | 顔位置: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)} | 傾き角度: ${angle.toFixed(2)} rad`);
       } else {
-        log(`[#${frameCount}] 顔を検出できません`);
+        log("顔を検出できません（カメラの正面に顔を向けてください）");
       }
     });
 
-    // Webカメラ起動＆頑丈な処理ループ
+    // Webカメラ起動
     async function startCamera() {
-      log("カメラ初期化中...");
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: "user" }
         });
-        
         videoElement.srcObject = stream;
-        
         videoElement.onloadedmetadata = () => {
           videoElement.play();
-          log("映像取得開始。解析を開始します...");
           processVideoFrame();
         };
       } catch (err) {
@@ -188,17 +164,11 @@
       }
     }
 
-    // エラーが起きてもループを落とさない堅牢なフレーム送信処理
     async function processVideoFrame() {
-      if (videoElement.readyState >= 2 && !videoElement.paused && !videoElement.ended) {
-        try {
-          await faceMesh.send({ image: videoElement });
-        } catch (e) {
-          console.error("FaceMesh送信エラー:", e);
-        }
+      if (!videoElement.paused && !videoElement.ended) {
+        await faceMesh.send({ image: videoElement });
+        requestAnimationFrame(processVideoFrame);
       }
-      // 成功・失敗にかかわらず次のフレームを呼び出す（止まり防止）
-      requestAnimationFrame(processVideoFrame);
     }
 
     startCamera();
