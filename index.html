@@ -3,270 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Anamorphic Portal Box Single Images</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-
+  <title>Anamorphic Portal Box (WebGL)</title>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0;
-      width: 100vw; height: 100vh;
-      overflow: hidden;
-      background: #000; color: #fff;
-      font-family: sans-serif;
+    body { margin: 0; overflow: hidden; background: #000; }
+    #stage { width: 100vw; height: 100vh; display: block; }
+    #ui {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      color: #6bffb8; background: rgba(0,0,0,0.8); padding: 8px 16px;
+      border-radius: 8px; font-family: sans-serif; font-size: 0.8rem; pointer-events: none;
     }
-    #stage {
-      position: absolute; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      display: block; z-index: 1;
-    }
-    #ui-overlay {
-      position: absolute; top: 10px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 10; text-align: center;
-      pointer-events: none;
-      background: rgba(0, 0, 0, 0.75);
-      padding: 8px 16px; border-radius: 8px;
-      max-width: 90vw;
-    }
-    #ui-overlay h2 { margin: 0 0 4px 0; font-size: 1rem; }
-    #debug-log { margin: 4px 0 0 0; font-size: 0.75rem; color: #6bffb8; white-space: pre-wrap; }
   </style>
+  <!-- Three.js & MediaPipe -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-  <div id="ui-overlay">
-    <h2>デジタルフィギュア箱（各画像1枚適用）</h2>
-    <div id="debug-log">画像を読み込んでいます...</div>
-  </div>
-
+  <div id="ui" id="log">カメラ・画像を読み込んでいます...</div>
   <canvas id="stage"></canvas>
   <video id="webcam" autoplay playsinline style="display:none;"></video>
 
   <script>
-    const logElem = document.getElementById('debug-log');
-    function log(msg) { logElem.innerText = msg; }
-
-    const canvas = document.getElementById('stage');
-    const ctx = canvas.getContext('2d');
+    const logElem = document.getElementById('ui');
     const videoElement = document.getElementById('webcam');
 
-    // ★ 5個の面に対して各1枚ずつ画像を指定
-    const imageSources = {
-      floor: '床.jpg',
-      back: '奥壁.jpg',
-      left: '左壁.jpg',
-      right: '右壁.jpg',
-      ceiling: '天井壁.jpg'
-    };
+    // 1. Scene, Camera, Renderer Setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 5);
 
-    const images = {};
-    let loadedCount = 0;
-    const totalImages = Object.keys(imageSources).length;
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stage'), antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-    Object.keys(imageSources).forEach(key => {
-      const img = new Image();
-      img.src = imageSources[key];
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === totalImages) {
-          log("全5枚の画像を読み込みました。カメラの許可を待っています...");
-          initCamera();
-        }
-      };
-      img.onerror = () => {
-        log(`画像「${imageSources[key]}」の読み込みに失敗しました。HTMLと同じフォルダにあるか確認してください。`);
-      };
-      images[key] = img;
+    // 2. Load Textures (各面1枚ずつ)
+    const textureLoader = new THREE.TextureLoader();
+    const materials = [
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('右壁.jpg'), side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('左壁.jpg'), side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('天井壁.jpg'), side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('床.jpg'), side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ map: textureLoader.load('奥壁.jpg'), side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide }) // 手前（空き）
+    ];
+
+    // 箱（Room）を作成
+    const boxGeo = new THREE.BoxGeometry(4, 4, 4);
+    const room = new THREE.Mesh(boxGeo, materials);
+    room.position.z = -2; // 画面奥に配置
+    scene.add(room);
+
+    // ウィンドウサイズ変更対応
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    function drawAnamorphicRoom(headX, headY) {
-      const w = canvas.width;
-      const h = canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-
-      // 奥の壁のデフォルトサイズ割合
-      const depthRatio = 0.45;
-
-      // 顔のトラッキング位置から計算する消失点（奥壁の中心）
-      const backCenterX = w / 2 - headX * w * 0.8;
-      const backCenterY = h / 2 - headY * h * 0.8;
-
-      const backW = w * depthRatio;
-      const backH = h * depthRatio;
-
-      // 奥壁の4頂点 [TL, TR, BR, BL]
-      const backWallQuad = [
-        { x: backCenterX - backW / 2, y: backCenterY - backH / 2 },
-        { x: backCenterX + backW / 2, y: backCenterY - backH / 2 },
-        { x: backCenterX + backW / 2, y: backCenterY + backH / 2 },
-        { x: backCenterX - backW / 2, y: backCenterY + backH / 2 }
-      ];
-
-      // 画面端（窓枠）の4頂点
-      const screenQuad = [
-        { x: 0, y: 0 },
-        { x: w, y: 0 },
-        { x: w, y: h },
-        { x: 0, y: h }
-      ];
-
-      // 1. 奥壁（1枚）
-      drawSingleImageQuad(images.back, backWallQuad);
-
-      // 2. 床（1枚）
-      const floorQuad = [
-        backWallQuad[3],
-        backWallQuad[2],
-        screenQuad[2],
-        screenQuad[3]
-      ];
-      drawSingleImageQuad(images.floor, floorQuad);
-
-      // 3. 天井（1枚）
-      const ceilingQuad = [
-        screenQuad[0],
-        screenQuad[1],
-        backWallQuad[1],
-        backWallQuad[0]
-      ];
-      drawSingleImageQuad(images.ceiling, ceilingQuad);
-
-      // 4. 左壁（1枚）
-      const leftQuad = [
-        screenQuad[0],
-        backWallQuad[0],
-        backWallQuad[3],
-        screenQuad[3]
-      ];
-      drawSingleImageQuad(images.left, leftQuad);
-
-      // 5. 右壁（1枚）
-      const rightQuad = [
-        backWallQuad[1],
-        screenQuad[1],
-        screenQuad[2],
-        backWallQuad[2]
-      ];
-      drawSingleImageQuad(images.right, rightQuad);
-    }
-
-    // 1枚の画像を4頂点の歪んだ領域（台形等）にフィットさせて描画
-    function drawSingleImageQuad(img, quad) {
-      if (!img || !img.complete) return;
-      
-      const grid = 10; // 歪み補正の分割数
-      
-      for (let gy = 0; gy < grid; gy++) {
-        for (let gx = 0; gx < grid; gx++) {
-          const u0 = gx / grid;
-          const v0 = gy / grid;
-          const u1 = (gx + 1) / grid;
-          const v1 = (gy + 1) / grid;
-
-          const p0 = bilinearInterpolate(quad, u0, v0);
-          const p1 = bilinearInterpolate(quad, u1, v0);
-          const p2 = bilinearInterpolate(quad, u1, v1);
-          const p3 = bilinearInterpolate(quad, u0, v1);
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(p0.x, p0.y);
-          ctx.lineTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.lineTo(p3.x, p3.y);
-          ctx.closePath();
-          ctx.clip();
-
-          const sx = u0 * img.width;
-          const sy = v0 * img.height;
-          const sw = (u1 - u0) * img.width;
-          const sh = (v1 - v0) * img.height;
-
-          const minX = Math.min(p0.x, p1.x, p2.x, p3.x);
-          const minY = Math.min(p0.y, p1.y, p2.y, p3.y);
-          const maxX = Math.max(p0.x, p1.x, p2.x, p3.x);
-          const maxY = Math.max(p0.y, p1.y, p2.y, p3.y);
-
-          ctx.drawImage(img, sx, sy, sw, sh, minX - 0.5, minY - 0.5, (maxX - minX) + 1, (maxY - minY) + 1);
-          ctx.restore();
-        }
-      }
-    }
-
-    function bilinearInterpolate(quad, u, v) {
-      const x = (1 - u) * (1 - v) * quad[0].x + u * (1 - v) * quad[1].x + u * v * quad[2].x + (1 - u) * v * quad[3].x;
-      const y = (1 - u) * (1 - v) * quad[0].y + u * (1 - v) * quad[1].y + u * v * quad[2].y + (1 - u) * v * quad[3].y;
-      return { x, y };
-    }
-
+    // 3. Off-Center Perspective Projection (アナモルフィック錯覚計算)
     let currentX = 0, currentY = 0;
     let targetX = 0, targetY = 0;
 
+    function updateProjection(headX, headY) {
+      // カメラの位置を顔に合わせて動かす
+      camera.position.x = headX * 3;
+      camera.position.y = -headY * 3;
+
+      // 視点を常に箱の中心（または画面の枠）に向け直す
+      camera.lookAt(0, 0, -2);
+    }
+
+    // 4. Face Tracking Setup
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
 
-    faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-
+    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
     faceMesh.onResults((results) => {
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        const landmarks = results.multiFaceLandmarks[0];
-        const nose = landmarks[1];
-        
+        const nose = results.multiFaceLandmarks[0][1];
         targetX = (nose.x - 0.5);
         targetY = (nose.y - 0.5);
-
-        log(`追従中 | X: ${targetX.toFixed(2)}, Y: ${targetY.toFixed(2)}`);
+        logElem.innerText = `追従中 | X: ${targetX.toFixed(2)}, Y: ${targetY.toFixed(2)}`;
       }
     });
-
-    function render() {
-      currentX += (targetX - currentX) * 0.15;
-      currentY += (targetY - currentY) * 0.15;
-
-      drawAnamorphicRoom(currentX, currentY);
-      requestAnimationFrame(render);
-    }
 
     async function initCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, facingMode: "user" }
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
         videoElement.srcObject = stream;
         videoElement.onloadedmetadata = () => {
           videoElement.play();
-          processVideoFrame();
+          processVideo();
           render();
         };
-      } catch (err) {
-        log("カメラ起動失敗: " + err.message);
+      } catch (e) {
+        logElem.innerText = "カメラエラー: " + e.message;
       }
     }
 
-    async function processVideoFrame() {
-      if (videoElement.readyState >= 2 && !videoElement.paused && !videoElement.ended) {
-        try {
-          await faceMesh.send({ image: videoElement });
-        } catch (e) {}
+    async function processVideo() {
+      if (videoElement.readyState >= 2) {
+        await faceMesh.send({ image: videoElement });
       }
-      requestAnimationFrame(processVideoFrame);
+      requestAnimationFrame(processVideo);
     }
+
+    function render() {
+      currentX += (targetX - currentX) * 0.1;
+      currentY += (targetY - currentY) * 0.1;
+
+      updateProjection(currentX, currentY);
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+
+    initCamera();
   </script>
 </body>
 </html>
