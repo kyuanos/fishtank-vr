@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>X3DOM 3D Box Hologram Tracking</title>
+  <title>X3DOM Portal Projection Box</title>
   
   <script src="https://www.x3dom.org/download/x3dom.js"></script>
   <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css">
@@ -40,16 +40,17 @@
 <body>
 
   <div id="ui-overlay">
-    <h2>デジタルフィギュア箱（極薄パネル表示）</h2>
+    <h2>デジタルフィギュア箱（窓枠完全固定モデル）</h2>
     <div id="debug-log">カメラ許可を待っています...</div>
   </div>
 
   <x3d id="x3dCanvas">
     <scene>
+      <!-- カメラ位置 -->
       <viewpoint id="vp" position="0 0 5" orientation="0 1 0 0" fieldOfView="0.785"></viewpoint>
       
-      <!-- ショーケース（箱）グループ -->
-      <transform id="roomGroup" rotation="0 1 0 0" translation="0 0 0">
+      <!-- ショーケース（箱）グループ：回転は一切行いません -->
+      <transform id="roomGroup" translation="0 0 0">
         
         <!-- 奥の壁 -->
         <transform id="backWall">
@@ -112,10 +113,9 @@
     function log(msg) { logElem.innerText = msg; }
 
     const vp = document.getElementById('vp');
-    const roomGroup = document.getElementById('roomGroup');
     const videoElement = document.getElementById('webcam');
 
-    // ノード要素
+    // 壁・床ノード要素
     const backWall = document.getElementById('backWall');
     const backWallBox = document.getElementById('backWallBox');
     const floor = document.getElementById('floor');
@@ -129,43 +129,38 @@
     const targetBox = document.getElementById('targetBox');
     const objectShape = document.getElementById('objectShape');
 
+    const baseCameraZ = 5;
+
     // -------------------------------------------------------------
-    // 極薄パネルで画面四隅にピッタリ配置する計算
+    // 画面サイズにぴったり合わせた箱のサイズ設定
     // -------------------------------------------------------------
     function updateRoomSize() {
-      const cameraZ = 5;
       const fov = parseFloat(vp.getAttribute('fieldOfView')) || 0.785;
       const aspect = window.innerWidth / window.innerHeight;
 
-      // 画面開口部のサイズ
-      const roomHeight = 2 * Math.tan(fov / 2) * cameraZ;
+      // 画面（Z=0）における窓枠サイズ
+      const roomHeight = 2 * Math.tan(fov / 2) * baseCameraZ;
       const roomWidth = roomHeight * aspect;
       const roomDepth = roomHeight * 0.8;
-
-      // 厚みを限りなくゼロに近い 0.001 に設定
       const wallThickness = 0.001;
 
-      // 奥の壁
+      // 箱の前フチを Z=0（画面の位置）に合わせる
       backWallBox.setAttribute('size', `${roomWidth} ${roomHeight} ${wallThickness}`);
       backWall.setAttribute('translation', `0 0 ${-roomDepth}`);
 
-      // 床
       floorBox.setAttribute('size', `${roomWidth} ${roomDepth} ${wallThickness}`);
       floor.setAttribute('translation', `0 ${-roomHeight / 2} ${-roomDepth / 2}`);
 
-      // 天井
       ceilingBox.setAttribute('size', `${roomWidth} ${roomDepth} ${wallThickness}`);
       ceiling.setAttribute('translation', `0 ${roomHeight / 2} ${-roomDepth / 2}`);
 
-      // 左の壁
       leftWallBox.setAttribute('size', `${roomDepth} ${roomHeight} ${wallThickness}`);
       leftWall.setAttribute('translation', `${-roomWidth / 2} 0 ${-roomDepth / 2}`);
 
-      // 右の壁
       rightWallBox.setAttribute('size', `${roomDepth} ${roomHeight} ${wallThickness}`);
       rightWall.setAttribute('translation', `${roomWidth / 2} 0 ${-roomDepth / 2}`);
 
-      // 中央オブジェクトの高さ・配置
+      // フィギュアのサイズ・位置
       const objScale = Math.min(roomWidth, roomHeight) * 0.45;
       objectShape.setAttribute('size', `${objScale} ${objScale * 1.3} ${objScale}`);
       targetBox.setAttribute('translation', `0 ${-roomHeight / 2 + (objScale * 1.3) / 2} ${-roomDepth / 2}`);
@@ -197,22 +192,33 @@
         const offsetX = (nose.x - 0.5);
         const offsetY = (nose.y - 0.5);
 
-        const sensitivity = 1.2;
+        // 視差移動の強度
+        const moveScale = 3.5;
 
-        const rotX = -offsetY * sensitivity; 
-        const rotY =  offsetX * sensitivity; 
+        // ★ここが最大のポイント！
+        // 箱を回転させるのではなく、カメラの「位置(Position)」と「注視(Orientation)」を変更します。
+        // 箱の前フチ（Z=0）は常に画面の端と密着固定されたまま、覗き込んだ角度だけ奥がズレて見えます。
+        const camX =  offsetX * moveScale;
+        const camY = -offsetY * moveScale;
+        const camZ = baseCameraZ;
 
+        // 1. カメラを頭の位置へ移動
+        vp.setAttribute('position', `${camX.toFixed(3)} ${camY.toFixed(3)} ${camZ.toFixed(3)}`);
+
+        // 2. カメラの向きを画面中央（0,0,0）に向ける
+        const rotY = -Math.atan2(camX, camZ);
+        const rotX =  Math.atan2(camY, Math.sqrt(camX * camX + camZ * camZ));
         const angle = Math.sqrt(rotX * rotX + rotY * rotY);
 
         if (angle > 0.001) {
           const axisX = rotX / angle;
           const axisY = rotY / angle;
-          roomGroup.setAttribute('rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
+          vp.setAttribute('orientation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${angle.toFixed(3)}`);
         } else {
-          roomGroup.setAttribute('rotation', '0 1 0 0');
+          vp.setAttribute('orientation', '0 1 0 0');
         }
 
-        log(`[#${frameCount}] 追従中 | 視線オフセット: X=${offsetX.toFixed(2)}, Y=${offsetY.toFixed(2)}`);
+        log(`[#${frameCount}] 追従中 | 視点移動: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
       } else {
         log(`[#${frameCount}] 顔を検出できません`);
       }
