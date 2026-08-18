@@ -119,82 +119,75 @@
       minTrackingConfidence: 0.5
     });
 
+    // 追従ログ用カウンター（動いているか視覚的に確認するため）
+    let frameCount = 0;
+
     faceMesh.onResults((results) => {
+      frameCount++;
+
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
         
-        // -------------------------------------------------------------
-        // 顔の画面中央からのズレ量を計算 (-0.5 〜 0.5 の範囲)
-        // -------------------------------------------------------------
-        const offsetX = (nose.x - 0.5); // 右に行くとプラス
-        const offsetY = (nose.y - 0.5); // 下に行くとプラス
+        // 顔のズレ量 (-0.5 〜 0.5)
+        const offsetX = (nose.x - 0.5);
+        const offsetY = (nose.y - 0.5);
 
-        // 覗き込みの移動強度（ガラスの奥の深さ感）
-        const eyeMoveScale = 3.0; 
+        // 覗き込みの移動強度
+        const eyeMoveScale = 3.0;
 
-        // 1. 物体は回さず正面で固定！
+        // 物体は固定
         targetBox.setAttribute('rotation', '0 1 0 0');
 
-        // 2. 見る人の目（カメラ）の位置を、顔の動きに合わせて平行移動
-        // 右から覗くとカメラが右へ移動するため、相対的に物体の右側面が見える
+        // カメラ（目線）の位置を変更
         const camX =  offsetX * eyeMoveScale;
-        const camY = -offsetY * eyeMoveScale; // 画面Y軸と3D空間Y軸の反転補正
-        const camZ = baseCameraZ;             // 自動調整されたベース距離
+        const camY = -offsetY * eyeMoveScale;
+        const camZ = typeof baseCameraZ !== 'undefined' ? baseCameraZ : 5;
 
         vp.setAttribute('position', `${camX.toFixed(3)} ${camY.toFixed(3)} ${camZ.toFixed(3)}`);
 
-        // 3. カメラの向き（視線）は常に「画面中央の箱（0,0,0）」を注視するように設定
-        // （これにより画面枠の四隅と景色の消失点が物理的に正しくリンクします）
+        // 注視点調整
         const angleY = -Math.atan2(camX, camZ);
-        const angleX =  Math.atan2(camY, camZ);
-        
-        // 簡易的な注視回転の適用
         vp.setAttribute('orientation', `0 1 0 ${angleY.toFixed(3)}`);
 
-        log(`覗き込み中 | 目線位置: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
+        // カウント（#）を付けてログを出力（数字が増えていれば認識がリアルタイムに動いています）
+        log(`[#${frameCount}] 追従中 | 目線: X=${camX.toFixed(2)}, Y=${camY.toFixed(2)}`);
       } else {
-        log("顔を検出できません");
+        log(`[#${frameCount}] 顔を検出できません（カメラの正面を向いてください）`);
       }
     });
 
-    // Webカメラ起動（エラー詳細ログ表示版）
+    // Webカメラ起動＆頑丈な処理ループ
     async function startCamera() {
-      log("カメラを初期化中...");
+      log("カメラ初期化中...");
       try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("このブラウザまたは環境（http/file）ではカメラがサポートされていません。");
-        }
-
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: "user" }
         });
         
         videoElement.srcObject = stream;
         
-        // メタデータロード完了時の処理
         videoElement.onloadedmetadata = () => {
-          log("カメラ読み込み成功！処理を開始します...");
           videoElement.play();
+          log("映像取得開始。解析を開始します...");
           processVideoFrame();
         };
-
-        // playがブロックされた場合の対策
-        videoElement.play().catch(e => {
-          log("ビデオ再生エラー: " + e.message);
-        });
-
       } catch (err) {
-        log("【エラー】" + err.name + ": " + err.message);
-        console.error(err);
+        log("カメラ起動失敗: " + err.message);
       }
     }
 
+    // エラーが起きてもループを落とさない堅牢なフレーム送信処理
     async function processVideoFrame() {
-      if (!videoElement.paused && !videoElement.ended) {
-        await faceMesh.send({ image: videoElement });
-        requestAnimationFrame(processVideoFrame);
+      if (videoElement.readyState >= 2 && !videoElement.paused && !videoElement.ended) {
+        try {
+          await faceMesh.send({ image: videoElement });
+        } catch (e) {
+          console.error("FaceMesh送信エラー:", e);
+        }
       }
+      // 成功・失敗にかかわらず次のフレームを呼び出す（止まり防止）
+      requestAnimationFrame(processVideoFrame);
     }
 
     startCamera();
