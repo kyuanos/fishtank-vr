@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Anamorphic Portal Box with Cube</title>
+  <title>Anamorphic Portal Box - Mode Switcher</title>
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     #stage { width: 100vw; height: 100vh; display: block; }
     #ui {
       position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-      color: #6bffb8; background: rgba(0,0,0,0.8); padding: 8px 16px;
+      color: #6bffb8; background: rgba(0,0,0,0.85); padding: 8px 14px;
       border-radius: 8px; font-family: sans-serif; font-size: 0.8rem;
-      z-index: 10; display: flex; align-items: center; gap: 10px;
+      z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 6px;
     }
-    #toggle-btn {
+    .btn-group { display: flex; gap: 8px; }
+    button {
       background: #6bffb8; color: #000; border: none;
       padding: 4px 10px; border-radius: 4px; font-weight: bold;
       cursor: pointer; font-size: 0.75rem;
     }
-    #toggle-btn:active { opacity: 0.8; }
+    button:active { opacity: 0.8; }
+    #mode-btn { background: #ffb86b; } /* モード切替ボタンを目立たせる */
   </style>
   <!-- Three.js & MediaPipe -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -28,7 +30,10 @@
 
   <div id="ui">
     <span id="log-text">カメラ・画像を読み込んでいます...</span>
-    <button id="toggle-btn">回転: ON</button>
+    <div class="btn-group">
+      <button id="mode-btn">現在のモード: モードA (トラッキング)</button>
+      <button id="toggle-btn">回転: ON</button>
+    </div>
   </div>
 
   <canvas id="stage"></canvas>
@@ -37,18 +42,37 @@
   <script>
     const logElem = document.getElementById('log-text');
     const toggleBtn = document.getElementById('toggle-btn');
+    const modeBtn = document.getElementById('mode-btn');
     const videoElement = document.getElementById('webcam');
 
-    // ★ 回転のON/OFF状態管理フラグ
+    // ★ フラグ管理
     let isRotating = true;
+    let currentMode = 'A'; // 'A': トラッキング+Off-Axis, 'B': 固定視体積
 
-    function toggleRotation(e) {
-      if (e) e.stopPropagation(); // イベントのバブリング防止
+    // 回転ON/OFFの切り替え
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       isRotating = !isRotating;
       toggleBtn.innerText = `回転: ${isRotating ? 'ON' : 'OFF'}`;
-    }
+    });
 
-    toggleBtn.addEventListener('click', toggleRotation);
+    // モードA / モードB の切り替え
+    modeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentMode = (currentMode === 'A') ? 'B' : 'A';
+      
+      if (currentMode === 'A') {
+        modeBtn.innerText = "現在のモード: モードA (トラッキング)";
+        modeBtn.style.background = "#6bffb8";
+      } else {
+        modeBtn.innerText = "現在のモード: モードB (固定視体積)";
+        modeBtn.style.background = "#ffb86b";
+        // モードBに切り替えた際はカメラ位置と姿勢をリセット
+        camera.position.set(0, 0, baseCameraZ);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      }
+    });
 
     // 1. Scene & Renderer Setup
     const scene = new THREE.Scene();
@@ -125,12 +149,16 @@
     window.addEventListener('resize', () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      camera.aspect = w / h;
       renderer.setSize(w, h);
+      camera.aspect = w / h;
       createSceneObjects();
+      
+      if (currentMode === 'B') {
+        camera.updateProjectionMatrix();
+      }
     });
 
-    // 4. Off-Axis Projection
+    // 4. Off-Axis Projection (モードA用)
     function setOffAxisProjection(headX, headY) {
       const camX = -headX * 4;
       const camY = -headY * 4;
@@ -193,23 +221,30 @@
       requestAnimationFrame(processVideo);
     }
 
+    // 6. メイン描画ループ
     function render() {
       currentX += (targetX - currentX) * 0.12;
       currentY += (targetY - currentY) * 0.12;
 
-      setOffAxisProjection(currentX, currentY);
+      // モードに応じたカメラプロジェクションの適用
+      if (currentMode === 'A') {
+        // ★ モードA: 顔位置に合わせて非対称視体積（Off-Axis）を計算
+        setOffAxisProjection(currentX, currentY);
+      } else {
+        // ★ モードB: カメラ位置固定・通常の対称視体積
+        camera.position.set(0, 0, baseCameraZ);
+      }
 
-      // ★ ONの時だけキューブを回転させる
+      // キューブの回転（Y軸のみ）
       if (cubeMesh && isRotating) {
         cubeMesh.rotation.y += 0.01;
-        // cubeMesh.rotation.x += 0.005;
       }
 
       renderer.render(scene, camera);
       requestAnimationFrame(render);
     }
 
-    // 描画ループとカメラの起動
+    // 起動
     render();
     initCamera();
   </script>
