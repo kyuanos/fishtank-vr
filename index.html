@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Anamorphic Portal Box - FishTank VR Mode</title>
+  <title>Anamorphic Portal Box - Mode Switcher</title>
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     #stage { width: 100vw; height: 100vh; display: block; }
@@ -20,7 +20,7 @@
       cursor: pointer; font-size: 0.75rem;
     }
     button:active { opacity: 0.8; }
-    #mode-btn { background: #6bffb8; }
+    #mode-btn { background: #ffb86b; } /* モード切替ボタンを目立たせる */
   </style>
   <!-- Three.js & MediaPipe -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -31,7 +31,7 @@
   <div id="ui">
     <span id="log-text">カメラ・画像を読み込んでいます...</span>
     <div class="btn-group">
-      <button id="mode-btn">現在のモード: モードA (FishTank視差)</button>
+      <button id="mode-btn">現在のモード: モードA (トラッキング)</button>
       <button id="toggle-btn">回転: ON</button>
     </div>
   </div>
@@ -47,28 +47,28 @@
 
     // ★ フラグ管理
     let isRotating = true;
-    let currentMode = 'A'; // 'A': FishTank視差 (Off-Axis), 'B': 固定視体積
+    let currentMode = 'A'; // 'A': トラッキング+Off-Axis, 'B': 固定視体積
 
+    // 回転ON/OFFの切り替え
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       isRotating = !isRotating;
       toggleBtn.innerText = `回転: ${isRotating ? 'ON' : 'OFF'}`;
     });
 
+    // モードA / モードB の切り替え
     modeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       currentMode = (currentMode === 'A') ? 'B' : 'A';
       
       if (currentMode === 'A') {
-        modeBtn.innerText = "現在のモード: モードA (FishTank視差)";
+        modeBtn.innerText = "現在のモード: モードA (トラッキング)";
         modeBtn.style.background = "#6bffb8";
       } else {
         modeBtn.innerText = "現在のモード: モードB (固定視体積)";
         modeBtn.style.background = "#ffb86b";
-        
-        // モードB切り替え時に視体積とカメラ姿勢を標準にリセット
+        // モードBに切り替えた際はカメラ位置と姿勢をリセット
         camera.position.set(0, 0, baseCameraZ);
-        camera.rotation.set(0, 0, 0);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
       }
@@ -78,7 +78,7 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     
-    const baseCameraZ = 5.0; // 基準となるカメラ距離
+    const baseCameraZ = 5;
     camera.position.set(0, 0, baseCameraZ);
 
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stage'), antialias: true });
@@ -107,6 +107,7 @@
     let cubeMesh;
     let screenWidth = 0;
     let screenHeight = 0;
+    
     const depthRatio = 0.35;
 
     // 3. 部屋と内部キューブの生成
@@ -157,13 +158,14 @@
       }
     });
 
-    // 4. FishTank Off-Axis Projection (覗き込み処理)
-    function setOffAxisProjection(camX, camY, camZ) {
-      // カメラ位置を設定（光軸は面に対して垂直に固定）
-      camera.position.set(camX, camY, camZ);
-      camera.rotation.set(0, 0, 0);
+    // 4. Off-Axis Projection (モードA用)
+    function setOffAxisProjection(headX, headY) {
+      const camX = -headX * 4;
+      const camY = -headY * 4;
+      const camZ = baseCameraZ;
 
-      // 画面領域（Z=0）に対するカメラ相対位置のオフセット計算
+      camera.position.set(camX, camY, camZ);
+
       const left   = -screenWidth / 2 - camX;
       const right  =  screenWidth / 2 - camX;
       const top    =  screenHeight / 2 - camY;
@@ -172,22 +174,18 @@
       const near = camera.near;
       const far  = camera.far;
 
-      // カメラ距離（camZ）に応じた視体積（Frustum）のスケール調整
       const scale = near / camZ;
       const l = left * scale;
       const r = right * scale;
       const t = top * scale;
       const b = bottom * scale;
 
-      // 非対称透視投影行列の作成・適用
       camera.projectionMatrix.makePerspective(l, r, t, b, near, far);
     }
 
-    // 5. Face Tracking & Distance Estimation
-    let currentX = 0, currentY = 0, currentZ = baseCameraZ;
-    let targetX = 0, targetY = 0, targetZ = baseCameraZ;
-
-    const baseEyeDistance = 0.14; // 標準的な顔の目間距離（画面相対値）
+    // 5. Face Tracking
+    let currentX = 0, currentY = 0;
+    let targetX = 0, targetY = 0;
 
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
@@ -196,24 +194,10 @@
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
     faceMesh.onResults((results) => {
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        const landmarks = results.multiFaceLandmarks[0];
-        const nose = landmarks[1];
-        const leftEye = landmarks[33];
-        const rightEye = landmarks[263];
-
-        // X, Yの位置座標計算（カメラ映像の鏡像化に合わせて左右方向を正規化）
-        targetX = -(nose.x - 0.5) * 6.0; 
-        targetY = -(nose.y - 0.5) * 6.0; 
-
-        // 両眼距離からZ軸（奥行き・顔と画面の距離）を推定
-        const currentEyeDist = Math.hypot(leftEye.x - rightEye.x, leftEye.y - rightEye.y);
-        if (currentEyeDist > 0) {
-          // 顔が近づくとcurrentEyeDistが大きくなり、targetZが小さくなる（より深く覗き込める）
-          const estimatedZ = baseCameraZ * (baseEyeDistance / currentEyeDist);
-          targetZ = Math.max(2.0, Math.min(8.0, estimatedZ)); // 限界値のクランプ処理
-        }
-
-        logElem.innerText = `FishTank 追従中 | X: ${targetX.toFixed(2)}, Y: ${targetY.toFixed(2)}, Z: ${targetZ.toFixed(2)}`;
+        const nose = results.multiFaceLandmarks[0][1];
+        targetX = (nose.x - 0.5);
+        targetY = (nose.y - 0.5);
+        logElem.innerText = `追従中 | X: ${targetX.toFixed(2)}, Y: ${targetY.toFixed(2)}`;
       }
     });
 
@@ -239,20 +223,19 @@
 
     // 6. メイン描画ループ
     function render() {
-      // 慣性フィルタリング（スムーズな覗き込み移動）
       currentX += (targetX - currentX) * 0.12;
       currentY += (targetY - currentY) * 0.12;
-      currentZ += (targetZ - currentZ) * 0.12;
 
+      // モードに応じたカメラプロジェクションの適用
       if (currentMode === 'A') {
-        // ★ モードA: 顔位置・距離にリアルタイム連動したFishTank（Off-Axis）描画
-        setOffAxisProjection(currentX, currentY, currentZ);
+        // ★ モードA: 顔位置に合わせて非対称視体積（Off-Axis）を計算
+        setOffAxisProjection(currentX, currentY);
       } else {
-        // ★ モードB: カメラ固定描画
+        // ★ モードB: カメラ位置固定・通常の対称視体積
         camera.position.set(0, 0, baseCameraZ);
       }
 
-      // キューブの自動回転
+      // キューブの回転（Y軸のみ）
       if (cubeMesh && isRotating) {
         cubeMesh.rotation.y += 0.01;
       }
