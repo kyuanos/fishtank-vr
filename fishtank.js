@@ -87,7 +87,7 @@
         const trackingGain = 3.5; // 移動感度
         targetX = -(nose.x - 0.5) * trackingGain;
         targetY = -(nose.y - 0.5) * trackingGain;
-        statusElem.innerText = `FishTank VR 追従中 (デフォルト視点)`;
+        statusElem.innerText = `FishTank VR 追従中`;
       }
     });
 
