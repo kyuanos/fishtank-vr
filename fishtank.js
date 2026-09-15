@@ -11,67 +11,66 @@
     });
   }
 
-  // 2. 視点回転（Axis-Angle）に応じたベクトル回転計算
-  function rotateVectorByAxisAngle(vx, vy, vz, ax, ay, az, angle) {
-    const len = Math.hypot(ax, ay, az);
-    if (len === 0 || angle === 0) return { x: vx, y: vy, z: vz };
-    ax /= len; ay /= len; az /= len;
-
-    const halfAngle = angle / 2;
-    const sinHalf = Math.sin(halfAngle);
-    const qw = Math.cos(halfAngle);
-    const qx = ax * sinHalf;
-    const qy = ay * sinHalf;
-    const qz = az * sinHalf;
-
-    const ix =  qw * vx + qy * vz - qz * vy;
-    const iy =  qw * vy + qz * vx - qx * vz;
-    const iz =  qw * vz + qx * vy - qy * vx;
-    const iw = -qx * vx - qy * vy - qz * vz;
-
-    return {
-      x: ix * qw + iw * -qx + iy * -qz - iz * -qy,
-      y: iy * qw + iw * -qy + iz * -qx - ix * -qz,
-      z: iz * qw + iw * -qz + ix * -qy - iy * -qx
-    };
-  }
-
-  // 3. X3DOMの投影行列（Projection Matrix）を拡張（Off-Axis射影の注入）
-  function patchX3DOMProjection() {
+  // 2. X3DOMの行列計算パイプライン拡張（マウス操作を壊さずにOff-Axis射影を注入）
+  function patchX3DOMPipeline() {
     if (typeof x3dom !== 'undefined' && x3dom.nodeTypes && x3dom.nodeTypes.Viewpoint) {
       if (!window.ftvrPatched) {
+
+        // A. ビュー行列（カメラの基準位置・姿勢）の拡張
+        // マウスや指で操作した現在のカメラ位置に対して、顔の位置変位をローカル加算する
+        const origGetView = x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix;
+        x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix = function() {
+          const mat = origGetView.call(this);
+          if (window.ftvrOffset) {
+            if (x3dom.fields && x3dom.fields.SFMatrix4f && x3dom.fields.SFMatrix4f.translation) {
+              const trans = x3dom.fields.SFMatrix4f.translation(
+                new x3dom.fields.SFVec3f(-window.ftvrOffset.x, -window.ftvrOffset.y, 0)
+              );
+              return trans.mult(mat);
+            } else {
+              mat._03 -= window.ftvrOffset.x;
+              mat._13 -= window.ftvrOffset.y;
+            }
+          }
+          return mat;
+        };
+
+        // B. 投影行列（Off-Axis シアー）の拡張
+        // 画面枠を固定し、顔の移動量に合わせて視野角を非対称に歪ませる
         const origGetProj = x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix;
         x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix = function(aspect) {
-          // 元の対称透視投影行列を取得
           const mat = origGetProj.call(this, aspect);
-          
           if (window.ftvrOffset) {
             const fov = this._vf.fieldOfView || 0.785398;
-            const baseD = window.ftvrBaseDist || 10.0;
             
-            // 近平面での仮想スクリーンサイズを計算
+            let baseD = 10.0;
+            if (this._vf && this._vf.position) {
+              const pos = this._vf.position;
+              const d = Math.hypot(pos.x, pos.y, pos.z);
+              if (d > 0.001) baseD = d;
+            }
+
             const screenH = 2.0 * baseD * Math.tan(fov / 2.0);
             const screenW = screenH * aspect;
-            
-            // ★核心部：投影行列のX, Yシアー成分を書き換えて非対称（Off-Axis）にする
-            // カメラが右に動いた分、視野枠を左に補正して画面境界を固定する
+
             mat._02 = -(2.0 * window.ftvrOffset.x) / screenW;
             mat._12 = -(2.0 * window.ftvrOffset.y) / screenH;
           }
           return mat;
         };
+
         window.ftvrPatched = true;
       }
     }
   }
 
-  // 4. システムメイン処理
+  // 3. システムメイン処理
   async function initFishTankVR() {
     if (!window.FaceMesh) {
       await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js');
     }
 
-    patchX3DOMProjection();
+    patchX3DOMPipeline();
 
     // カメラ用隠しvideo要素の生成
     const videoElement = document.createElement('video');
@@ -81,7 +80,7 @@
     videoElement.style.display = 'none';
     document.body.appendChild(videoElement);
 
-    // CSS不要のインラインスタイルUI生成
+    // インラインスタイルUI生成
     const uiElement = document.createElement('div');
     uiElement.id = 'ftvr-ui';
     uiElement.style.cssText = `
@@ -115,10 +114,10 @@
     faceMesh.onResults((results) => {
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const nose = results.multiFaceLandmarks[0][1];
-        const trackingGain = 5.0; // 少し強めに設定（必要に応じて調整）
+        const trackingGain = 5.0; // 移動感度
         targetX = -(nose.x - 0.5) * trackingGain;
         targetY = -(nose.y - 0.5) * trackingGain;
-        statusElem.innerText = `FishTank VR 追従中`;
+        statusElem.innerText = `FishTank VR 追従中 (マウス・タッチ操作可能)`;
       }
     });
 
@@ -140,43 +139,19 @@
       return;
     }
 
-    // 5. デフォルト視点の指定（pingu_view -> front_view -> 最初のviewpoint）
-    const defaultVp = document.getElementById('pingu_view') || 
-                      document.getElementById('front_view') || 
-                      document.querySelector('viewpoint');
-    if (!defaultVp) return;
-
-    // デフォルト初期座標・姿勢の取得と完全固定化
-    const posAttr = (defaultVp.getAttribute('position') || "0 0 10").trim().split(/\s+/).map(Number);
-    const oriAttr = (defaultVp.getAttribute('orientation') || "0 1 0 0").trim().split(/\s+/).map(Number);
-
-    const defaultPos = { x: posAttr[0], y: posAttr[1], z: posAttr[2] };
-    const defaultOri = { ax: oriAttr[0], ay: oriAttr[1], az: oriAttr[2], angle: oriAttr[3] };
-
-    // 画面までの基準距離をデフォルト座標の原点からの距離として算出
-    const baseDist = Math.hypot(defaultPos.x, defaultPos.y, defaultPos.z);
-    window.ftvrBaseDist = baseDist === 0 ? 10.0 : baseDist;
-
-    // 6. 追従描画ループ
+    // 4. 描画同期ループ（X3DOMのレンダリングをリアルタイムトリガー）
     function renderLoop() {
       currentX += (targetX - currentX) * 0.12;
       currentY += (targetY - currentY) * 0.12;
 
-      // オフセット量をグローバル変数に渡し、パッチ済みの投影行列に反映させる
+      // 顔追従オフセットを行列パッチへ共有
       window.ftvrOffset = { x: currentX, y: currentY };
 
-      // デフォルト初期回転を考慮して顔オフセットを回転変換
-      const rotatedOffset = rotateVectorByAxisAngle(
-        currentX, currentY, 0,
-        defaultOri.ax, defaultOri.ay, defaultOri.az, defaultOri.angle
-      );
-
-      // デフォルト初期位置基準で座標を動的更新（カメラ自体の位置移動）
-      const newX = defaultPos.x + rotatedOffset.x;
-      const newY = defaultPos.y + rotatedOffset.y;
-      const newZ = defaultPos.z + rotatedOffset.z;
-
-      defaultVp.setAttribute('position', `${newX.toFixed(4)} ${newY.toFixed(4)} ${newZ.toFixed(4)}`);
+      // X3DOMへ安全に再描画要求を発行
+      const x3dElem = document.querySelector('x3d');
+      if (x3dElem && x3dElem.runtime && x3dElem.runtime.triggerRedraw) {
+        x3dElem.runtime.triggerRedraw();
+      }
 
       requestAnimationFrame(renderLoop);
     }
