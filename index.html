@@ -4,29 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Anamorphic Portal Box - FishTank VR Mode</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: #000; }
-    #stage { width: 100vw; height: 100vh; display: block; }
-    #ui {
-      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-      color: #6bffb8; background: rgba(0,0,0,0.85); padding: 8px 14px;
-      border-radius: 8px; font-family: sans-serif; font-size: 0.8rem;
-      z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 6px;
-    }
-    .btn-group { display: flex; gap: 8px; }
-    button {
-      background: #6bffb8; color: #000; border: none;
-      padding: 4px 10px; border-radius: 4px; font-weight: bold;
-      cursor: pointer; font-size: 0.75rem;
-    }
-    button:active { opacity: 0.8; }
-    #mode-btn { background: #6bffb8; }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  
   <!-- Three.js & MediaPipe -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 </head>
 <body>
+  <a href="pingu.htm" target="_blank" class="link-button">pinguを開く</a>
 
   <div id="ui">
     <span id="log-text">カメラ・画像を読み込んでいます...</span>
@@ -34,225 +19,21 @@
       <button id="mode-btn">現在のモード: モードA (FishTank視差)</button>
       <button id="toggle-btn">回転: ON</button>
     </div>
+
+    <!-- 壁紙アップロードUI -->
+    <div id="texture-panel">
+      <div class="upload-item"><label>左壁 (1):</label><input type="file" id="input-left" accept="image/*"></div>
+      <div class="upload-item"><label>天井 (2):</label><input type="file" id="input-top" accept="image/*"></div>
+      <div class="upload-item"><label>右壁 (3):</label><input type="file" id="input-right" accept="image/*"></div>
+      <div class="upload-item"><label>床  (4):</label><input type="file" id="input-bottom" accept="image/*"></div>
+      <div class="upload-item"><label>奥壁  :</label><input type="file" id="input-back" accept="image/*"></div>
+    </div>
   </div>
 
   <canvas id="stage"></canvas>
   <video id="webcam" autoplay playsinline style="display:none;"></video>
 
-  <script>
-    const logElem = document.getElementById('log-text');
-    const toggleBtn = document.getElementById('toggle-btn');
-    const modeBtn = document.getElementById('mode-btn');
-    const videoElement = document.getElementById('webcam');
-
-    // ★ フラグ管理
-    let isRotating = true;
-    let currentMode = 'A'; // 'A': FishTank視差 (Off-Axis), 'B': 固定視体積
-
-    toggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      isRotating = !isRotating;
-      toggleBtn.innerText = `回転: ${isRotating ? 'ON' : 'OFF'}`;
-    });
-
-    modeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      currentMode = (currentMode === 'A') ? 'B' : 'A';
-      
-      if (currentMode === 'A') {
-        modeBtn.innerText = "現在のモード: モードA (FishTank視差)";
-        modeBtn.style.background = "#6bffb8";
-      } else {
-        modeBtn.innerText = "現在のモード: モードB (固定視体積)";
-        modeBtn.style.background = "#ffb86b";
-        
-        // モードB切り替え時に視体積とカメラ姿勢を標準にリセット
-        camera.position.set(0, 0, baseCameraZ);
-        camera.rotation.set(0, 0, 0);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-      }
-    });
-
-    // 1. Scene & Renderer Setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    
-    const baseCameraZ = 5.0; // 基準となるカメラ距離
-    camera.position.set(0, 0, baseCameraZ);
-
-    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stage'), antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-
-    // ライティング
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    dirLight.position.set(2, 4, 3);
-    scene.add(dirLight);
-
-    // 2. Load Textures
-    const textureLoader = new THREE.TextureLoader();
-    const roomMaterials = [
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('右壁２.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('左壁２.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('天井壁.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('床.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ map: textureLoader.load('奥壁２.jpg'), side: THREE.BackSide }),
-      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, side: THREE.BackSide })
-    ];
-
-    let room;
-    let cubeMesh;
-    let screenWidth = 0;
-    let screenHeight = 0;
-    const depthRatio = 0.35;
-
-    // 3. 部屋と内部キューブの生成
-    function createSceneObjects() {
-      const fovRad = (camera.fov * Math.PI) / 180;
-      const aspect = window.innerWidth / window.innerHeight;
-
-      screenHeight = 2 * Math.tan(fovRad / 2) * baseCameraZ;
-      screenWidth = screenHeight * aspect;
-      const roomDepth = screenHeight * depthRatio;
-
-      if (room) scene.remove(room);
-      if (cubeMesh) scene.remove(cubeMesh);
-
-      // ① 部屋（背景）
-      const roomGeo = new THREE.BoxGeometry(screenWidth, screenHeight, roomDepth);
-      room = new THREE.Mesh(roomGeo, roomMaterials);
-      room.position.set(0, 0, -roomDepth / 2);
-      scene.add(room);
-
-      // ② 正方形キューブ
-      const cubeSize = Math.min(screenWidth, screenHeight) * 0.35;
-      const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      
-      const cubeMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x44aa88, 
-        roughness: 0.4,
-        metalness: 0.2
-      });
-      
-      cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-      cubeMesh.position.set(0, -screenHeight * 0.1, -roomDepth * 0.5);
-      cubeMesh.rotation.y = Math.PI / 6; 
-      scene.add(cubeMesh);
-    }
-
-    createSceneObjects();
-
-    window.addEventListener('resize', () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      renderer.setSize(w, h);
-      camera.aspect = w / h;
-      createSceneObjects();
-      
-      if (currentMode === 'B') {
-        camera.updateProjectionMatrix();
-      }
-    });
-
-    // 4. FishTank Off-Axis Projection (覗き込み処理)
-    function setOffAxisProjection(camX, camY, camZ) {
-      camera.position.set(camX, camY, camZ);
-      camera.rotation.set(0, 0, 0);
-
-      const left   = -screenWidth / 2 - camX;
-      const right  =  screenWidth / 2 - camX;
-      const top    =  screenHeight / 2 - camY;
-      const bottom = -screenHeight / 2 - camY;
-
-      const near = camera.near;
-      const far  = camera.far;
-
-      const scale = near / camZ;
-      const l = left * scale;
-      const r = right * scale;
-      const t = top * scale;
-      const b = bottom * scale;
-
-      camera.projectionMatrix.makePerspective(l, r, t, b, near, far);
-    }
-
-    // 5. Face Tracking & Distance Estimation
-    let currentX = 0, currentY = 0, currentZ = baseCameraZ;
-    let targetX = 0, targetY = 0, targetZ = baseCameraZ;
-
-    const faceMesh = new FaceMesh({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
-    faceMesh.onResults((results) => {
-      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        const landmarks = results.multiFaceLandmarks[0];
-        const nose = landmarks[1];
-
-        // 移動倍率と画面サイズの比率調整
-        const trackingGain = 1.8; 
-        targetX = -(nose.x - 0.5) * trackingGain * (screenWidth / 2); 
-        targetY = -(nose.y - 0.5) * trackingGain * (screenHeight / 2); 
-
-        // Z軸は固定値で歪みを防ぐ
-        targetZ = baseCameraZ;
-
-        logElem.innerText = `FishTank 追従中 | X: ${targetX.toFixed(2)}, Y: ${targetY.toFixed(2)}`;
-      }
-    });
-
-    // ★ カメラの初期化処理（復元）
-    async function initCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { width: 640, height: 480, facingMode: "user" } 
-        });
-        videoElement.srcObject = stream;
-        videoElement.onloadedmetadata = () => {
-          videoElement.play();
-          processVideo();
-        };
-      } catch (e) {
-        logElem.innerText = "カメラエラー: " + e.message;
-      }
-    }
-
-    // ★ フレーム処理ループ（復元）
-    async function processVideo() {
-      if (videoElement.readyState >= 2) {
-        await faceMesh.send({ image: videoElement });
-      }
-      requestAnimationFrame(processVideo);
-    }
-
-    // 6. メイン描画ループ
-    function render() {
-      // 慣性フィルタリング
-      currentX += (targetX - currentX) * 0.12;
-      currentY += (targetY - currentY) * 0.12;
-      currentZ += (targetZ - currentZ) * 0.12;
-
-      if (currentMode === 'A') {
-        setOffAxisProjection(currentX, currentY, currentZ);
-      } else {
-        camera.position.set(0, 0, baseCameraZ);
-      }
-
-      if (cubeMesh && isRotating) {
-        cubeMesh.rotation.y += 0.01;
-      }
-
-      renderer.render(scene, camera);
-      requestAnimationFrame(render);
-    }
-
-    // 起動
-    render();
-    initCamera();
-  </script>
+  <!-- JSファイルの読み込み -->
+  <script src="main.js"></script>
 </body>
 </html>
