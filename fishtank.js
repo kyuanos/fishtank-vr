@@ -11,29 +11,55 @@
     });
   }
 
-  // 2. 視点回転（Axis-Angle）に応じたベクトル回転計算
-  function rotateVectorByAxisAngle(vx, vy, vz, ax, ay, az, angle) {
-    const len = Math.hypot(ax, ay, az);
-    if (len === 0 || angle === 0) return { x: vx, y: vy, z: vz };
-    ax /= len; ay /= len; az /= len;
+  // 2. X3DOMの行列計算パイプライン拡張（Off-Axis射影の注入）
+  function patchX3DOMPipeline() {
+    if (typeof x3dom !== 'undefined' && x3dom.nodeTypes && x3dom.nodeTypes.Viewpoint) {
+      if (!window.ftvrPatched) {
 
-    const halfAngle = angle / 2;
-    const sinHalf = Math.sin(halfAngle);
-    const qw = Math.cos(halfAngle);
-    const qx = ax * sinHalf;
-    const qy = ay * sinHalf;
-    const qz = az * sinHalf;
+        // A. ビュー行列の拡張
+        const origGetView = x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix;
+        x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix = function() {
+          const mat = origGetView.call(this);
+          if (window.ftvrOffset && (window.ftvrOffset.x !== 0 || window.ftvrOffset.y !== 0)) {
+            if (x3dom.fields && x3dom.fields.SFMatrix4f && x3dom.fields.SFMatrix4f.translation) {
+              const trans = x3dom.fields.SFMatrix4f.translation(
+                new x3dom.fields.SFVec3f(-window.ftvrOffset.x, -window.ftvrOffset.y, 0)
+              );
+              return trans.mult(mat);
+            } else {
+              mat._03 -= window.ftvrOffset.x;
+              mat._13 -= window.ftvrOffset.y;
+            }
+          }
+          return mat;
+        };
 
-    const ix =  qw * vx + qy * vz - qz * vy;
-    const iy =  qw * vy + qz * vx - qx * vz;
-    const iz =  qw * vz + qx * vy - qy * vx;
-    const iw = -qx * vx - qy * vy - qz * vz;
+        // B. 投影行列（Off-Axis シアー）の拡張
+        const origGetProj = x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix;
+        x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix = function(aspect) {
+          const mat = origGetProj.call(this, aspect);
+          if (window.ftvrOffset && (window.ftvrOffset.x !== 0 || window.ftvrOffset.y !== 0)) {
+            const fov = this._vf.fieldOfView || 0.785398;
+            
+            let baseD = 10.0;
+            if (this._vf && this._vf.position) {
+              const pos = this._vf.position;
+              const d = Math.hypot(pos.x, pos.y, pos.z);
+              if (d > 0.001) baseD = d;
+            }
 
-    return {
-      x: ix * qw + iw * -qx + iy * -qz - iz * -qy,
-      y: iy * qw + iw * -qy + iz * -qx - ix * -qz,
-      z: iz * qw + iw * -qz + ix * -qy - iy * -qx
-    };
+            const screenH = 2.0 * baseD * Math.tan(fov / 2.0);
+            const screenW = screenH * aspect;
+
+            mat._02 = -(2.0 * window.ftvrOffset.x) / screenW;
+            mat._12 = -(2.0 * window.ftvrOffset.y) / screenH;
+          }
+          return mat;
+        };
+
+        window.ftvrPatched = true;
+      }
+    }
   }
 
   // 3. システムメイン処理
@@ -41,6 +67,8 @@
     if (!window.FaceMesh) {
       await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js');
     }
+
+    patchX3DOMPipeline();
 
     // カメラ用隠しvideo要素の生成
     const videoElement = document.createElement('video');
@@ -50,27 +78,55 @@
     videoElement.style.display = 'none';
     document.body.appendChild(videoElement);
 
-    // CSS不要のインラインスタイルUI生成
+    // 視点追従 ON/OFF 状態フラグ
+    let isTrackingEnabled = true;
+
+    // クリック可能なUIボタンの生成
     const uiElement = document.createElement('div');
     uiElement.id = 'ftvr-ui';
     uiElement.style.cssText = `
       position: fixed;
       top: 10px;
       right: 10px;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       color: #6bffb8;
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
       font-family: sans-serif;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: bold;
       z-index: 9999;
-      pointer-events: none;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     `;
     uiElement.innerHTML = '<span id="ftvr-status">FishTank VR 初期化中...</span>';
     document.body.appendChild(uiElement);
 
     const statusElem = document.getElementById('ftvr-status');
+
+    // UIの表示更新ルーチン
+    function updateUI(statusText) {
+      if (!isTrackingEnabled) {
+        uiElement.style.background = 'rgba(60, 60, 60, 0.85)';
+        uiElement.style.color = '#ccc';
+        statusElem.innerHTML = '📷 視点追従: <b style="color:#ff6b6b;">OFF</b> (クリックでON)';
+      } else {
+        uiElement.style.background = 'rgba(0, 0, 0, 0.85)';
+        uiElement.style.color = '#6bffb8';
+        statusElem.innerHTML = statusText || '📷 視点追従: <b style="color:#6bffb8;">ON</b> (クリックでOFF)';
+      }
+    }
+
+    // UIクリックでON/OFFトグル切り替え
+    uiElement.addEventListener('click', () => {
+      isTrackingEnabled = !isTrackingEnabled;
+      updateUI();
+    });
 
     let targetX = 0, targetY = 0;
     let currentX = 0, currentY = 0;
@@ -82,12 +138,15 @@
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
 
     faceMesh.onResults((results) => {
-      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+      if (isTrackingEnabled && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const nose = results.multiFaceLandmarks[0][1];
-        const trackingGain = 3.5; // 移動感度
+        const trackingGain = 5.0; // 移動感度
         targetX = -(nose.x - 0.5) * trackingGain;
         targetY = -(nose.y - 0.5) * trackingGain;
-        statusElem.innerText = `FishTank VR 追従中`;
+        updateUI();
+      } else if (!isTrackingEnabled) {
+        targetX = 0;
+        targetY = 0;
       }
     });
 
@@ -109,36 +168,24 @@
       return;
     }
 
-    // 4. デフォルト視点の指定（pingu_view -> front_view -> 最初のviewpoint）
-    const defaultVp = document.getElementById('pingu_view') || 
-                      document.getElementById('front_view') || 
-                      document.querySelector('viewpoint');
-    if (!defaultVp) return;
-
-    // デフォルト初期座標・姿勢の取得と完全固定化
-    const posAttr = (defaultVp.getAttribute('position') || "0 0 10").trim().split(/\s+/).map(Number);
-    const oriAttr = (defaultVp.getAttribute('orientation') || "0 1 0 0").trim().split(/\s+/).map(Number);
-
-    const defaultPos = { x: posAttr[0], y: posAttr[1], z: posAttr[2] };
-    const defaultOri = { ax: oriAttr[0], ay: oriAttr[1], az: oriAttr[2], angle: oriAttr[3] };
-
-    // 5. 追従描画ループ
+    // 4. 描画同期ループ
     function renderLoop() {
+      // OFFにした場合、滑らかに初期位置 (0, 0) に戻る
       currentX += (targetX - currentX) * 0.12;
       currentY += (targetY - currentY) * 0.12;
 
-      // デフォルト初期回転を考慮して顔オフセットを回転変換
-      const rotatedOffset = rotateVectorByAxisAngle(
-        currentX, currentY, 0,
-        defaultOri.ax, defaultOri.ay, defaultOri.az, defaultOri.angle
-      );
+      // 閾値以下の微小値は0に丸める
+      if (Math.abs(currentX) < 0.0001) currentX = 0;
+      if (Math.abs(currentY) < 0.0001) currentY = 0;
 
-      // デフォルト初期位置基準で座標を動的更新
-      const newX = defaultPos.x + rotatedOffset.x;
-      const newY = defaultPos.y + rotatedOffset.y;
-      const newZ = defaultPos.z + rotatedOffset.z;
+      // 顔追従オフセットを行列パッチへ共有
+      window.ftvrOffset = { x: currentX, y: currentY };
 
-      defaultVp.setAttribute('position', `${newX.toFixed(4)} ${newY.toFixed(4)} ${newZ.toFixed(4)}`);
+      // X3DOMへ再描画要求
+      const x3dElem = document.querySelector('x3d');
+      if (x3dElem && x3dElem.runtime && x3dElem.runtime.triggerRedraw) {
+        x3dElem.runtime.triggerRedraw();
+      }
 
       requestAnimationFrame(renderLoop);
     }
