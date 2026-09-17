@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+     <script type='text/javascript' src='https://www.x3dom.org/download/1.8.1/x3dom-full.js'> </script> 
+     <link rel='stylesheet' type='text/css' href='https://www.x3dom.org/release/x3dom.css'></link>
+     <script src="fishtank.js"></script> 
+    <title>ピングー</title>
+  </head>
+  <body>
+	<!--
+    <h1>ピングー</h1>
+    <p>
+      作品の説明<br>
+      世界で一番有名なペンギン、ピングーです。印象的な鳴き声が実は「Noot Noot」と鳴いている事を制作中に初めて知りました。<br>
+      特徴的な体の黄色いラインの表現に苦戦しましたが、黒、黄、白の胴体を少しずつ傾けて重ねる事で上手く表現できました。<br>
+      卵型がなかったのでSnoutやDishを組み合わせて胴体を再現しました。Torusを手や足の各所に組み込んだ事でより自然なポーズを取らせることが出来たと思います。<br>
+      
+      <br>
+      視点移動<br>
+      左ボタンドラッグ：見回し(Rotate)<br>
+      真ん中ボタンドラッグ または Ctrl+左ボタンドラッグ：平行移動(Pan)<br>
+      右ボタンドラッグ または ホイール：ズーム(Zoom)<br>
+      aキー：オブジェクトを全部見る(Show all)<br>
+      uキー：視点の上下を正す(Upright)<br>
+      rキー：視点のリセット(Reset)<br>
+    </p>
+    <div class="buttons group">
+        <input type="button" value="ヘッドライト ON" onclick="document.getElementById('navi').setAttribute('headlight','true');"/>
+        <input type="button" value="ヘッドライト OFF" onclick="document.getElementById('navi').setAttribute('headlight','false');"/>
+        <input type="button" value="前の視点" onclick="document.getElementById('x3d').runtime.prevView();"/>
+        <input type="button" value="次の視点" onclick="document.getElementById('x3d').runtime.nextView();"/>
+        <BR>
+        <input type="button" value="前から(+Zから)" onclick="document.getElementById('front_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="後から(-Zから)" onclick="document.getElementById('back_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="上から(+Yから)" onclick="document.getElementById('top_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="下から(-Yから)" onclick="document.getElementById('bottom_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="右から(+Xから)" onclick="document.getElementById('right_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="左から(-Xから)" onclick="document.getElementById('left_view').setAttribute('set_bind','true');"/>
+        <br>
+        <input type="button" value="よっ！！(初期)" onclick="document.getElementById('pingu_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="どこか哀愁漂うご尊顔" onclick="document.getElementById('kao_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="南極を歩くピングー" onclick="document.getElementById('nankyoku_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="引き" onclick="document.getElementById('wide_view').setAttribute('set_bind','true');"/>
+
+
+    </div>
+    <div id="str">Viewpoint</div>
+	-->
+    <x3d id="x3d" style="width:100vw; height:100vh; margin:auto;" showLog="false" showStat="false">
+    
+      <scene id="scene">
+        <!-- ヘッドライトの設定 -->
+        <navigationInfo id="navi" headlight="false"></navigationInfo>
+
+        <!-- 太陽光源の設定（複数可） -->
+        <!-- direction 光の方向 -->
+        <!-- ambientIntensity 環境光の明るさ -->
+        <directionalLight direction="-1 -1 -1" color="1 1 1" ambientIntensity="0.2"></directionalLight>
+        <directionalLight direction="1 1 1" color="1 1 1" ambientIntensity="0.2"></directionalLight>
+
+        <!-- 背景の指定 -->
+        <background groundColor="1 1 1" skyColor="0.53725490196 0.74117647058 0.87058823529"></background>
+
+        <!-- 視点の設定（複数可）-->
+        <viewpoint id="pingu_view" description="pingu" position="0.130407 3.476919 13.181845" orientation="-0.999988 0.000619 0.004782 0.203131"></viewpoint>
+        <viewpoint id="front_view" description="front" position="0 1.25 10" orientation="0 1 0 0"></viewpoint>
+        <viewpoint id="back_view" description="back" position="0 1.25 -10" orientation="0 1 0 3.14"></viewpoint>
+        <viewpoint id="top_view" description="top" position="0 10 0" orientation="1 0 0 -1.57"></viewpoint>
+        <viewpoint id="bottom_view" description="bottom" position="0 -10 0" orientation="1 0 0 1.57"></viewpoint>
+        <viewpoint id="right_view" description="right" position="10 1.25 0" orientation="0 1 0 1.57"></viewpoint>
+        <viewpoint id="left_view" description="left" position="-10 1.25 0" orientation="0 1 0 -1.57"></viewpoint>
+        <viewpoint id="kao_view" description="kao" position="0.354644 4.348352 2.377048" orientation="0.915918 0.400254 -0.029842 0.115766"></viewpoint>
+        <viewpoint id="nankyoku_view" description="nankyoku" position="-7.446712 -2.009147 46.300893" orientation="0.067244 -0.846492 -0.528137 0.374984"></viewpoint>
+        <viewpoint id="wide_view" description="wide" position="-2.934003 0.480695 35.4967" orientation="0.451689 -0.89185 -0.024102 0.092609"></viewpoint>
+        
+        <!-- オブジェクト -->
+        <transform rotation="0 1 0 0.52333333333"><!--全身-->
+		  <transform translation="0 0.5 0"><!--顔と胴体-->
+		    <transform translation="0 4 0.5"><!--頭-->
+		      <transform rotation="0 1 0 -0.52333333333">
+		        <transform rotation="0 0 1 -0.17444444444">
+		          <transform scale="1 0.8 0.8" rotation="0 0 1 0" translation="0 0 0"><!--顔-->
+		            <shape>
+		              <Sphere radius="1"></Sphere>
+		              <appearance>
+		                <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        
+		          <transform scale="0.41 0.25 0.4" rotation="0 0 1 0" translation="0 -0.2 0.7"><!--くちばし-->
+		            <shape>
+		              <Sphere radius="1"></Sphere>
+		              <appearance>
+		                <material diffuseColor="1 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        
+		          <transform scale="0.2 0.2 0.1" rotation="0 1 0 0.52333333333" translation="0.5 0.14 0.6"><!--左目-->
+		            <shape>
+		              <Sphere radius="1"></Sphere>
+		              <appearance>
+		                <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        
+		          <transform scale="0.11 0.11 0.03" rotation="0 1 0 0.34888888888" translation="0.5 0.15 0.7"><!--左目瞳-->
+		            <shape>
+		              <Sphere radius="1"></Sphere>
+		              <appearance>
+		                <material diffuseColor="0 0 0" specularColor="0 0 0" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        
+		          <transform scale="0.2 0.2 0.1" rotation="0 1 0 -0.52333333333" translation="-0.5 0.14 0.6"><!--右目-->
+		            <shape>
+		              <Sphere radius="1"></Sphere>
+		              <appearance>
+		                <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        
+		          <transform scale="0.11 0.11 0.03" rotation="0 1 0 -0.34888888888" translation="-0.5 0.15 0.7"><!--右目瞳-->
+		            <shape>
+		              <Sphere radius="1"></Sphere>
+		              <appearance>
+		                <material diffuseColor="0 0 0" specularColor="0 0 0" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        </transform>
+		      </transform>
+		    </transform>
+		        
+		    <transform translation="0 1.2 0"><!--胴（黒色）-->
+		      <transform scale="1 1 1" rotation="0 0 1 0" translation="0 1.22 0"><!--首-->
+		        <shape>
+		          <Dish diameter="2.55" height="3" bottom="true"></Dish>
+		          <appearance>
+		            <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		        
+		      <transform scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--胴-->
+		        <shape>
+		          <Snout dbottom='3.0' dtop='2.55' height='2.5' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+		          <appearance>
+		            <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		        
+		      <transform scale="1 1 1" rotation="0 0 1 3.14" translation="0 -1.24 0"><!--腰-->
+		        <shape>
+		          <Dish diameter="3.055" height="2" bottom="true"></Dish>
+		          <appearance>
+		            <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		    </transform>
+		      
+			<transform translation="0 1.158 0.09"><!--胴（黄色ライン）-->
+			  <transform scale="1.02 0.9 1">
+			    <transform rotation="1 0 0 0.08722222222">
+			      <transform scale="1 1 1" rotation="0 0 1 0" translation="0 1.22 0"><!--首-->
+			        <shape>
+			          <Dish diameter="2.55" height="3" bottom="true"></Dish>
+			          <appearance>
+			            <material diffuseColor="1 1 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+			          </appearance>
+			        </shape>
+			      </transform>
+			        
+			      <transform scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--胴-->
+			        <shape>
+			          <Snout dbottom='3.0' dtop='2.55' height='2.77' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+			          <appearance>
+			            <material diffuseColor="1 1 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+			          </appearance>
+			        </shape>
+			      </transform>
+			    </transform>
+			  </transform>
+			</transform>
+			  
+			<transform translation="0 1.11 0.13"><!--胴（白色ライン）-->
+			  <transform scale="1.02 0.9 1">
+			    <transform rotation="1 0 0 0.08722222222">
+			      <transform scale="1 1 1" rotation="0 0 1 0" translation="0 1.22 0"><!--首-->
+			        <shape>
+			          <Dish diameter="2.55" height="3" bottom="true"></Dish>
+			          <appearance>
+			            <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+			          </appearance>
+			        </shape>
+			      </transform>
+			        
+			      <transform scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--胴-->
+			        <shape>
+			          <Snout dbottom='3.045' dtop='2.55' height='2.77' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+			          <appearance>
+			            <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+			          </appearance>
+			        </shape>
+			      </transform>
+			    </transform>
+			  </transform>
+		    </transform>
+		  </transform>
+
+	      <transform scale="0.2 1 0.2" rotation="1 0 0 -0.52333333333" translation="0.5 -1.2 1"><!--左足上-->
+	        <shape>
+	          <Cylinder radius="1" height="1.5" top="true" bottom="true"></Cylinder>
+	          <appearance>
+	            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	          </appearance>
+	        </shape>
+	      </transform>
+	        
+	      <transform translation="0.5 -1.85 2.1"><!--左足下-->
+		   <transform rotation="1 0 0 -1.57">
+		      <transform scale="1 1 0.4" rotation="0 0 1 0" translation="0 0.6 0"><!--左足かかと-->
+		        <shape>
+		          <Dish diameter="0.8" height="1" bottom="true"></Dish>
+		          <appearance>
+		            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		        
+		      <transform scale="1 1 0.4" rotation="0 0 1 0" translation="0 0 0"><!--左足腹-->
+		        <shape>
+		          <Snout dbottom='1.0' dtop='0.8' height='1.2' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+		          <appearance>
+		            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		        
+		      <transform translation="0 -1 0.4">
+		         <transform rotation="1 0 0 0"><!--左足つま先曲がり-->
+		          <transform scale="0.4 0.4 1" rotation="0 1 0 1.57" translation="0 0.4 0">
+	                <shape>
+	                  <Torus angle='1.04666666667' caps='true' innerRadius='0.5' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                  <appearance>
+	                    <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                  </appearance>
+	                </shape>
+	              </transform>
+	            </transform>
+	          </transform>
+	           
+	          <transform scale="1 1 0.4" rotation="1 0 0 -1.04666666667" translation="0 -1.095 0.46"><!--左足つま先上-->
+		        <shape>
+		          <Snout dbottom='1.0' dtop='1.0' height='0.6' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+		          <appearance>
+		            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		       
+		      <transform translation="0 -1.244 0.719">
+		        <transform rotation="1 0 0 -1.04666666667">
+		          <transform scale="1 1 0.4" rotation="0 0 1 3.14" translation="0 0 0"><!--左足つま先下-->
+		            <shape>
+		              <Dish diameter="1.0" height="1" bottom="true"></Dish>
+		              <appearance>
+		                <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        </transform>
+		      </transform>
+		    </transform>
+		  </transform>
+		    
+		  <transform scale="0.2 1 0.2" rotation="1 0 0 0.52333333333" translation="-0.5 -1.2 -1"><!--右足上-->
+	        <shape>
+	          <Cylinder radius="1" height="1.5" top="true" bottom="true"></Cylinder>
+	          <appearance>
+	            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	          </appearance>
+	        </shape>
+	      </transform>
+	        
+	      <transform translation="-0.5 -1.85 -0.3"><!--右足下-->
+		    <transform rotation="1 0 0 -1.57">
+		      <transform scale="1 1 0.4" rotation="1 0 0 0.52333333333" translation="0 1.16 0.05"><!--右足かかと-->
+		        <shape>
+		          <Dish diameter="0.8" height="1" bottom="true"></Dish>
+		          <appearance>
+		            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		        
+		      <transform translation="0 1 0.328">
+		        <transform rotation="1 0 0 0.52333333333"><!--右足かかと曲がり-->
+		          <transform scale="0.32 0.35 0.8" rotation="0 1 0 1.57" translation="0 0 0">
+	                <shape>
+	                  <Torus angle='0.52333333333' caps='true' innerRadius='0.5' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                  <appearance>
+	                    <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                  </appearance>
+	                </shape>
+	              </transform>
+	            </transform>
+	          </transform>
+		        
+		      <transform scale="1 1 0.4" rotation="0 0 1 0" translation="0 0 0"><!--右足腹-->
+		        <shape>
+		          <Snout dbottom='1.0' dtop='0.8' height='2.0' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+		          <appearance>
+		            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		        
+		      <transform scale="1 1 0.4" rotation="0 0 1 3.14" translation="0 -1 0"><!--右足つま先-->
+		        <shape>
+		          <Dish diameter="1.0" height="1" bottom="true"></Dish>
+		          <appearance>
+		            <material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		          </appearance>
+		        </shape>
+		      </transform>
+		    </transform>
+		  </transform>
+
+		  <transform translation="1.7 3.7 1"><!--左腕-->
+		    <transform rotation="0 0 1 0.17444444444">
+		      <transform rotation="1 0 0 -1.39555555554">
+		        <transform translation="-0.76 0 -0.4"><!--左鎖骨-->
+		          <transform rotation="0 1 0 0">
+		            <transform scale="0.76 0.76 0.4" rotation="0 0 1 1.57" translation="0 0 0">
+	                  <shape>
+	                    <Torus angle='1.57' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                    <appearance>
+	                      <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                    </appearance>
+	                  </shape>
+	                </transform>
+	              </transform>
+	            </transform>
+		          
+		        <transform translation="0 0 0"><!--左肩-->
+		          <transform rotation="0 1 0 0">
+		            <transform scale="0.4 0.39 0.76" rotation="0 1 0 1.57" translation="0 0 0">
+	                  <shape>
+	                    <Torus angle='1.57' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                    <appearance>
+	                      <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                    </appearance>
+	                  </shape>
+	                </transform>
+	              </transform>
+	            </transform>
+	              
+	            <transform scale="1 1 0.5" rotation="1 0 0 1.57" translation="0 -0.39 0.25"><!--左二の腕-->
+		          <shape>
+		            <Snout dbottom='1.0' dtop='1.1' height='0.5' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+		            <appearance>
+		              <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		            </appearance>
+		          </shape>
+		        </transform>
+	              
+	            <transform translation="0 0.03 0.5"><!--左手首上-->
+		          <transform rotation="1 0 0 -1.57">
+		            <transform scale="0.42 0.5 0.85" rotation="0 1 0 1.57" translation="0 0 0">
+	                  <shape>
+	                    <Torus angle='0.785' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                    <appearance>
+	                      <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                    </appearance>
+	                  </shape>
+	                </transform>
+	              </transform>
+	            </transform>
+	              
+	            <transform translation="0 -0.565 1.2"><!--左手首下-->
+		          <transform rotation="1 0 0 1.57">
+		            <transform scale="0.42 0.5 0.85" rotation="0 1 0 1.57" translation="0 0 0">
+	                  <shape>
+	                    <Torus angle='0.785' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                    <appearance>
+	                      <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                    </appearance>
+	                  </shape>
+	                </transform>
+	              </transform>
+	            </transform>
+		          
+		        <transform scale="0.85 1 0.42" rotation="1 0 0 1.57" translation="0 -0.147 1.19"><!--左指先-->
+		          <shape>
+		            <Dish diameter="1.3" height="1" bottom="true"></Dish>
+		            <appearance>
+		              <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		            </appearance>
+		          </shape>
+		        </transform>
+		      </transform>
+		    </transform>
+		  </transform>
+		  
+		  <transform translation="-1.8 0.4 0"><!--右腕-->
+		    <transform rotation="0 0 1 -0.24422222219">
+		      <transform rotation="0 1 0 1.57">
+		        <transform translation="0 3.239 0.061"><!--右鎖骨-->
+		          <transform scale="1 1 0.5" rotation="1 0 0 0.52333333333" translation="0 0 0">
+	                <shape>
+		              <Dish diameter="1.0" height="1" bottom="true"></Dish>
+		              <appearance>
+		                <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		              </appearance>
+		            </shape>
+		          </transform>
+		        </transform>
+		          
+		        <transform translation="0 3 0.5">
+		          <transform rotation="1 0 0 0.52333333333"><!--右肩-->
+		            <transform scale="0.5 0.5 1" rotation="0 1 0 1.57" translation="0 0 0">
+	                  <shape>
+	                    <Torus angle='0.52333333333' caps='true' innerRadius='0.5' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                    <appearance>
+	                      <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                    </appearance>
+	                  </shape>
+	                </transform>
+	              </transform>
+	            </transform>
+	             
+	            <transform scale="1 1 0.5" rotation="0 0 1 0" translation="0 1.5 0"><!--右二の腕-->
+		          <shape>
+		            <Snout dbottom='1.3' dtop='1.0' height='3.0' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+		            <appearance>
+		              <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                </appearance>
+		          </shape>
+		        </transform>
+	              
+	            <transform translation="0 0 -0.5"><!--右手首-->
+		          <transform rotation="0 1 0 3.14">
+		            <transform scale="0.5 0.5 1" rotation="0 1 0 1.57" translation="0 0 0">
+	                  <shape>
+	                    <Torus angle='0.785' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+	                    <appearance>
+	                      <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+	                    </appearance>
+	                  </shape>
+	                </transform>
+	              </transform>
+	            </transform>
+		         
+		        <transform translation="0 -0.3525 -0.145"><!--右指先-->
+		          <transform rotation="1 0 0 0.785">
+		            <transform scale="1 1 0.5" rotation="0 0 1 3.14" translation="0 0 0">
+		              <shape>
+		                <Dish diameter="1.3" height="1" bottom="true"></Dish>
+		                <appearance>
+		                  <material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+		                </appearance>
+		              </shape>
+		            </transform>
+		          </transform>
+		        </transform>
+		      </transform>
+		    </transform>
+	      </transform>
+	    </transform>
+	    
+	    <!-- オブジェクト2 -->
+	    <transform scale="1 1 1" rotation="0 0 1 0" translation="10 0.5 -5"><!--低雪山1-->
+          <shape>
+            <Cone bottomRadius="3" height="5" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="-10 2 5"><!--雪山1-->
+          <shape>
+            <Cone bottomRadius="3" height="8" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="7 3 -19"><!--長雪山1-->
+          <shape>
+            <Cone bottomRadius="3" height="10" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="-18 2 -13"><!--雪山2-->
+          <shape>
+            <Cone bottomRadius="3" height="8" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="4 0.5 20"><!--低雪山2-->
+          <shape>
+            <Cone bottomRadius="3" height="5" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="-4 2 -22"><!--雪山3-->
+          <shape>
+            <Cone bottomRadius="3" height="8" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="15 3 3"><!--長雪山2-->
+          <shape>
+            <Cone bottomRadius="3" height="10" bottom="true"></Cone>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="-6 0.5 -13"><!--雪岩1-->
+          <shape>
+            <Pyramid height='5' xbottom='8.0' ybottom='8.0' xtop='6.0' ytop='6.0' xoff='0.0' yoff='0.0' ></Pyramid>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="-20 0.5 0"><!--雪岩2-->
+          <shape>
+            <Pyramid height='5' xbottom='8.0' ybottom='8.0' xtop='6.0' ytop='6.0' xoff='0.0' yoff='0.0' ></Pyramid>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="-15 0.5 18"><!--雪岩3-->
+          <shape>
+            <Pyramid height='5' xbottom='8.0' ybottom='8.0' xtop='6.0' ytop='6.0' xoff='0.0' yoff='0.0' ></Pyramid>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 0 1 0" translation="16 0.5 16"><!--雪岩4-->
+          <shape>
+            <Pyramid height='5' xbottom='8.0' ybottom='8.0' xtop='6.0' ytop='6.0' xoff='0.0' yoff='0.0' ></Pyramid>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform scale="1 1 1" rotation="0 1 0 0.785" translation="18 0.5 -10"><!--長雪岩1-->
+          <shape>
+            <Pyramid height='5' xbottom='8.0' ybottom='16.0' xtop='6.0' ytop='12.0' xoff='0.0' yoff='0.0' ></Pyramid>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+        <transform id="yuki" scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--雪1-->
+          <transform DEF="snow" scale="1 1 1" rotation="0 0 1 0" translation="0 0 0">
+            <shape>
+              <sphere radius="0.4"></sphere>
+              <appearance>
+                <material diffuseColor="1 1 1" specularColor="0 0 0" shiness="0.2" transparency="0.2"></material>
+              </appearance>
+            </shape>
+          </transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='4' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='10 20 -5, 10 -2 -5'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-10 20 5"><!--雪2-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='5' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-10 20 5, -10 -2 5'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="7 20 -19"><!--雪3-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='6' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='7 20 -19, 7 -2 -19'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-18 20 -13"><!--雪4-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='7' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-18 20 -13, -18 -2 -13'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="4 20 20"><!--雪5-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='4' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='4 20 20, 4 -2 20'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-4 20 -22"><!--雪6-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='5' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-4 20 -22, -4 -2 -22'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="15 20 3"><!--雪7-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='6' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='15 20 3, 15 -2 3'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-6 20 -13"><!--雪8-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='7' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-6 20 -13, -6 -2 -13'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-20 20 0"><!--雪9-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='4' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-20 20 0, -20 -2 0'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-15 20 18"><!--雪10-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='5' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-15 20 18, -15 -2 18'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="16 20 16"><!--雪11-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='6' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='16 20 16, 16 -2 16'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="16 20 -12"><!--雪12-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='7' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='16 20 -12, 16 -2 -12'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="8 20 3"><!--雪13-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='4' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='8 20 3, 8 -2 3'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="5 20 10"><!--雪14-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='5' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='5 20 10, 5 -2 10'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-4 20 10"><!--雪15-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='6' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-4 20 10, -4 -2 10'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-6 20 -5"><!--雪16-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='7' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-6 20 -5, -6 -2 -5'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-13 20 -5"><!--雪17-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='4' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-13 20 -5, -13 -2 -5'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="4 20 -10"><!--雪18-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='5' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='4 20 -10, 4 -2 -10'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-7 20 19"><!--雪19-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='6' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-7 20 19, -7 -2 19'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-4 20 24"><!--雪20-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='7' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-4 20 24, -4 -2 24'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="0 20 24"><!--雪21-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='4' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='0 20 24, 0 -2 24'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="-22 20 8"><!--雪22-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='5' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='-22 20 8, -22 -2 8'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="22 20 7"><!--雪23-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='6' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='22 20 7, 22 -2 7'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform id="yuki" rotation="0 0 1 0" translation="20 20 -8"><!--雪24-->
+          <transform USE='snow'></transform>
+        </transform>
+        <TimeSensor DEF='TIMER' cycleInterval='7' loop='true'></TimeSensor>
+        <PositionInterpolator DEF='PI' key='0 1' keyValue='20 20 -8, 20 -2 -8'></PositionInterpolator>
+        <ROUTE fromNode='TIMER' fromField='fraction_changed' toNode='PI' toField='set_fraction'></ROUTE>
+        <ROUTE fromNode='PI' fromField='value_changed' toNode='yuki' toField='translation'></ROUTE>
+        
+        <transform scale="30 0.1 30" rotation="0 0 1 0" translation="0 -2 0"><!--台-->
+          <shape>
+            <Cylinder radius="1" height="1" top="true" bottom="true"></Cylinder>
+            <appearance>
+              <material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+        
+
+      </scene>
+    </x3d>
+    <script>
+        var pos;
+        var rot;
+        var viewFunc = function(evt) {
+        	pos = evt.position;
+        	rot = evt.orientation;
+            text = '&lt;viewpoint id="name_view" description="name" position="' + 
+                                Math.round(pos.x*1000000.0)/1000000.0 +' '+Math.round(pos.y*1000000.0)/1000000.0+' '+Math.round(pos.z*1000000.0)/1000000.0 +
+								'" orientation="' + Math.round(rot[0].x*1000000.0)/1000000.0+' '+Math.round(rot[0].y*1000000.0)/1000000.0+' '+Math.round(rot[0].z*1000000.0)/1000000.0+' '+Math.round(rot[1]*1000000.0)/1000000.0+'"&gt;&lt;/viewpoint&gt;';
+            document.getElementById("str").innerHTML=text;
+        };
+
+        function addIt() {
+            var scene = document.getElementById('scene');
+            for (var i = 0; i < scene.children.length; i++) {
+                if (scene.children[i].nodeName == "VIEWPOINT") {
+                    //x3dom.debug.logInfo(scene.children[i].nodeName);
+                    scene.children[i].addEventListener('viewpointChanged', viewFunc, false);
+                }
+            }
+        }
+
+        document.onload = addIt;
+
+        function showViewpoint() {
+			x3dom.debug.logInfo('position: ' + pos.x+' '+pos.y+' '+pos.z +'\n' +
+								'orientation: ' + rot[0].x+' '+rot[0].y+' '+rot[0].z+' '+rot[1]);
+        }
+    </script>
+  </body>
+</html>
