@@ -41,7 +41,8 @@
         x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix = function(aspect) {
           const mat = origGetProj.call(this, aspect);
           if (window.ftvrOffset && (window.ftvrOffset.x !== 0 || window.ftvrOffset.y !== 0)) {
-            const fov = this._vf.fieldOfView || 0.785398;
+            // ★目までの距離から計算された動的FOVがあれば優先使用し、なければデフォルト値を使用
+            const fov = window.ftvrDynamicFov || this._vf.fieldOfView || 0.785398;
             
             // カメラからオブジェクトまでの距離（baseD）を算出
             let baseD = 10.0;
@@ -161,7 +162,7 @@
     });
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
     
-    // 鼻の座標からズレ量を計算する部分およびデバイスまでの距離計算処理
+    // 鼻の座標からズレ量を計算する部分およびデバイスまでの距離・動的FOV計算処理
     faceMesh.onResults((results) => {
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
@@ -192,6 +193,13 @@
           currentDistanceMeters = currentDistanceMeters === 0 
             ? calculatedDistance 
             : currentDistanceMeters * 0.85 + calculatedDistance * 0.15;
+
+          // ★【追加】距離(m)と画面高さ(m)から物理的な視野角（FOV: rad）をリアルタイム幾何計算
+          // 一般的な画面高さ（約14インチノートPC画面で約0.23m）
+          const estimatedScreenHeightMeters = 0.23;
+          if (currentDistanceMeters > 0.05) {
+            window.ftvrDynamicFov = 2.0 * Math.atan((estimatedScreenHeightMeters / 2.0) / currentDistanceMeters);
+          }
         }
 
         if (isTrackingEnabled) {
