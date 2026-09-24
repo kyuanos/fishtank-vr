@@ -90,8 +90,8 @@
     <!-- スマホ画面アスペクト比（19.5:9）に合わせた表示エリア -->
     <x3d id="x3d" style="width:280px; height:600px; margin:auto; display:block;" showLog="false" showStat="false">
       <scene id="scene">
-        <!-- ヘッドライトの設定 -->
-        <navigationInfo id="navi" headlight="false"></navigationInfo>
+        <!-- ナビゲーション設定：操作スピードを実寸用に落とし、回転・移動を制限 -->
+        <navigationInfo id="navi" headlight="false" type='"EXAMINE" "NONE"' speed="0.1"></navigationInfo>
 
         <!-- 光源の設定（メイン光＆サブ環境光） -->
         <directionalLight direction="-1 -1 -1" color="1 1 1" ambientIntensity="0.3"></directionalLight>

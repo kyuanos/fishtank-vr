@@ -208,7 +208,8 @@
         }
 
         if (isTrackingEnabled) {
-          const trackingGain = 5.0; // 移動感度
+          // 変更: 実寸スケール(幅6.8cm)に合わせて感度を 5.0 -> 0.15 に下げる
+          const trackingGain = 0.15; // 移動感度（メートル単位）
           targetX = -(nose.x - 0.5) * trackingGain;
           targetY = -(nose.y - 0.5) * trackingGain;
         } else {
