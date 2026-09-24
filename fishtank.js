@@ -16,7 +16,9 @@
     if (typeof x3dom !== 'undefined' && x3dom.nodeTypes && x3dom.nodeTypes.Viewpoint) {
       if (!window.ftvrPatched) {
 
-        // A. ビュー行列の拡張
+        // A. カメラ位置の補正（ビュー行列：View Matrix の計算）
+        // マウスやボタン操作で決まったカメラの基本位置・姿勢（origGetView）に対して、
+        // 顔の位置変化（window.ftvrOffset）分だけカメラ位置を平行移動させる行列演算を行っている。
         const origGetView = x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix;
         x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix = function() {
           const mat = origGetView.call(this);
@@ -41,16 +43,19 @@
           if (window.ftvrOffset && (window.ftvrOffset.x !== 0 || window.ftvrOffset.y !== 0)) {
             const fov = this._vf.fieldOfView || 0.785398;
             
+            // カメラからオブジェクトまでの距離（baseD）を算出
             let baseD = 10.0;
             if (this._vf && this._vf.position) {
               const pos = this._vf.position;
               const d = Math.hypot(pos.x, pos.y, pos.z);
               if (d > 0.001) baseD = d;
             }
-
+            
+            // 仮想画面の縦横幅（screenH, screenW）を計算
             const screenH = 2.0 * baseD * Math.tan(fov / 2.0);
             const screenW = screenH * aspect;
-
+            
+            // 核心部：投影行列のシアー成分（_02, _12）を書き換えて領域を台形に歪ませる
             mat._02 = -(2.0 * window.ftvrOffset.x) / screenW;
             mat._12 = -(2.0 * window.ftvrOffset.y) / screenH;
           }
@@ -136,7 +141,8 @@
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
-
+    
+    // 鼻の座標からズレ量を計算する部分
     faceMesh.onResults((results) => {
       if (isTrackingEnabled && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const nose = results.multiFaceLandmarks[0][1];
@@ -168,7 +174,8 @@
       return;
     }
 
-    // 4. 描画同期ループ
+    // 4. フレームごとに滑らかに近づける部分
+    // 毎フレーム currentX を targetX へ向かって12%ずつ滑らかに変化させる（イージング処理）。
     function renderLoop() {
       // OFFにした場合、滑らかに初期位置 (0, 0) に戻る
       currentX += (targetX - currentX) * 0.12;
