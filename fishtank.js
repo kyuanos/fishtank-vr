@@ -36,15 +36,20 @@
           return mat;
         };
 
-        // B. 投影行列（Off-Axis シアー）の拡張
+        // B. 投影行列（Off-Axis シアー ＆ 動的FOV）の拡張
         const origGetProj = x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix;
         x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix = function(aspect) {
           const mat = origGetProj.call(this, aspect);
           if (window.ftvrOffset && (window.ftvrOffset.x !== 0 || window.ftvrOffset.y !== 0)) {
-            // ★目までの距離から計算された動的FOVがあれば優先使用し、なければデフォルト値を使用
+            // 1. 動的なFOVを取得（未算出時はデフォルト）
             const fov = window.ftvrDynamicFov || this._vf.fieldOfView || 0.785398;
             
-            // カメラからオブジェクトまでの距離（baseD）を算出
+            // ★【追加】FOVの変化に応じて投影行列の透視倍率（ズーム・焦点距離成分）を動的更新
+            const cotan = 1.0 / Math.tan(fov / 2.0);
+            mat._11 = cotan;          // Y軸（縦）の透視倍率
+            mat._00 = cotan / aspect;  // X軸（横）の透視倍率
+
+            // 2. カメラからオブジェクトまでの距離（baseD）を算出
             let baseD = 10.0;
             if (this._vf && this._vf.position) {
               const pos = this._vf.position;
@@ -52,11 +57,11 @@
               if (d > 0.001) baseD = d;
             }
             
-            // 仮想画面の縦横幅（screenH, screenW）を計算
+            // 3. 仮想画面の縦横幅（screenH, screenW）を計算
             const screenH = 2.0 * baseD * Math.tan(fov / 2.0);
             const screenW = screenH * aspect;
             
-            // 核心部：投影行列のシアー成分（_02, _12）を書き換えて領域を台形に歪ませる
+            // 4. 核心部：投影行列のシアー成分（_02, _12）を書き換えて領域を台形に歪ませる
             mat._02 = -(2.0 * window.ftvrOffset.x) / screenW;
             mat._12 = -(2.0 * window.ftvrOffset.y) / screenH;
           }
@@ -196,7 +201,7 @@
 
           // ★【追加】距離(m)と画面高さ(m)から物理的な視野角（FOV: rad）をリアルタイム幾何計算
           // 一般的な画面高さ（約14インチノートPC画面で約0.23m）
-          const estimatedScreenHeightMeters = 0.23;
+          const estimatedScreenHeightMeters = 0.15;
           if (currentDistanceMeters > 0.05) {
             window.ftvrDynamicFov = 2.0 * Math.atan((estimatedScreenHeightMeters / 2.0) / currentDistanceMeters);
           }
