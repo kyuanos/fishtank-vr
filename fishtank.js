@@ -86,6 +86,9 @@
     // 視点追従 ON/OFF 状態フラグ
     let isTrackingEnabled = true;
 
+    // リアルタイム推定距離(m)の保持用変数
+    let currentDistanceMeters = 0;
+
     // クリック可能なUIボタンの生成
     const uiElement = document.createElement('div');
     uiElement.id = 'ftvr-ui';
@@ -106,8 +109,8 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.4);
       transition: all 0.2s ease;
       display: flex;
-      align-items: center;
-      gap: 6px;
+      flex-direction: column;
+      gap: 4px;
     `;
     uiElement.innerHTML = '<span id="ftvr-status">FishTank VR 初期化中...</span>';
     document.body.appendChild(uiElement);
@@ -116,14 +119,22 @@
 
     // UIの表示更新ルーチン
     function updateUI(statusText) {
+      const distStr = currentDistanceMeters > 0 ? `${currentDistanceMeters.toFixed(2)} m` : '-- m';
+
       if (!isTrackingEnabled) {
         uiElement.style.background = 'rgba(60, 60, 60, 0.85)';
         uiElement.style.color = '#ccc';
-        statusElem.innerHTML = '📷 視点追従: <b style="color:#ff6b6b;">OFF</b> (クリックでON)';
+        statusElem.innerHTML = `
+          <div>📷 視点追従: <b style="color:#ff6b6b;">OFF</b> (クリックでON)</div>
+          <div style="font-size:0.75rem; color:#aaa;">距離: ${distStr}</div>
+        `;
       } else {
         uiElement.style.background = 'rgba(0, 0, 0, 0.85)';
         uiElement.style.color = '#6bffb8';
-        statusElem.innerHTML = statusText || '📷 視点追従: <b style="color:#6bffb8;">ON</b> (クリックでOFF)';
+        statusElem.innerHTML = `
+          <div>📷 視点追従: <b style="color:#6bffb8;">ON</b> (クリックでOFF)</div>
+          <div style="font-size:0.75rem; color:#6bffb8;">デバイスまでの距離: <b>${distStr}</b></div>
+        `;
       }
     }
 
@@ -142,17 +153,49 @@
     });
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
     
-    // 鼻の座標からズレ量を計算する部分
+    // 鼻の座標からズレ量を計算する部分およびデバイスまでの距離計算処理
     faceMesh.onResults((results) => {
-      if (isTrackingEnabled && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        const nose = results.multiFaceLandmarks[0][1];
-        const trackingGain = 5.0; // 移動感度
-        targetX = -(nose.x - 0.5) * trackingGain;
-        targetY = -(nose.y - 0.5) * trackingGain;
+      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        const landmarks = results.multiFaceLandmarks[0];
+        const nose = landmarks[1];
+
+        // 瞳のランドマークを取得（468:左瞳中心, 473:右瞳中心、フォールバック:33, 263）
+        const leftEye = landmarks[468] || landmarks[33];
+        const rightEye = landmarks[473] || landmarks[263];
+
+        const vw = videoElement.videoWidth || 640;
+        const vh = videoElement.videoHeight || 480;
+
+        // 画像上での両瞳間のピクセル距離を計算
+        const dx = (rightEye.x - leftEye.x) * vw;
+        const dy = (rightEye.y - leftEye.y) * vh;
+        const distPx = Math.hypot(dx, dy);
+
+        if (distPx > 0) {
+          // 成人の平均瞳孔間距離 (IPD) ≒ 0.063m (6.3cm)
+          const realIPD = 0.063;
+          // Webカメラの焦点距離推定値 (px)
+          const focalLength = vw * 0.85;
+          
+          // ピンホールカメラモデルに基づく距離(m)の算出
+          const calculatedDistance = (realIPD * focalLength) / distPx;
+          
+          // チラつき防止のためのローパスフィルタ（平滑化処理）
+          currentDistanceMeters = currentDistanceMeters === 0 
+            ? calculatedDistance 
+            : currentDistanceMeters * 0.85 + calculatedDistance * 0.15;
+        }
+
+        if (isTrackingEnabled) {
+          const trackingGain = 5.0; // 移動感度
+          targetX = -(nose.x - 0.5) * trackingGain;
+          targetY = -(nose.y - 0.5) * trackingGain;
+        } else {
+          targetX = 0;
+          targetY = 0;
+        }
+
         updateUI();
-      } else if (!isTrackingEnabled) {
-        targetX = 0;
-        targetY = 0;
       }
     });
 
