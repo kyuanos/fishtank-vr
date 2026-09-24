@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <script type='text/javascript' src='https://www.x3dom.org/download/1.8.1/x3dom.js'></script> 
+    <link rel='stylesheet' type='text/css' href='https://www.x3dom.org/release/x3dom.css'></link> 
+    <title>スマホサイズの外箱と浮遊ボックス</title>
+  </head>
+  <body>
+    <h1>スマホサイズの外箱と浮遊ボックス</h1>
+    <p>
+      作品の説明：スマホ比率（縦長）の外箱の中に、中央で浮かぶボックスを配置した作品です。<br>
+      <br>
+      視点移動<br>
+      左ボタンドラッグ：見回し(Rotate)<br>
+      真ん中ボタンドラッグ または Ctrl+左ボタンドラッグ：平行移動(Pan)<br>
+      右ボタンドラッグ または ホイール：ズーム(Zoom)<br>
+      aキー：オブジェクトを全部見る(Show all)<br>
+      uキー：視点の上下を正す(Upright)<br>
+      rキー：視点のリセット(Reset)<br>
+    </p>
+    <div class="buttons group">
+        <input type="button" value="ヘッドライト ON" onclick="document.getElementById('navi').setAttribute('headlight','true');"/>
+        <input type="button" value="ヘッドライト OFF" onclick="document.getElementById('navi').setAttribute('headlight','false');"/>
+        <input type="button" value="デバッグ ON" onclick="document.getElementById('x3d').runtime.debug(true);"/>
+        <input type="button" value="デバッグ OFF" onclick="document.getElementById('x3d').runtime.debug(false);"/>
+        <br>
+        <input type="button" value="前の視点" onclick="document.getElementById('x3d').runtime.prevView();"/>
+        <input type="button" value="次の視点" onclick="document.getElementById('x3d').runtime.nextView();"/>
+        <br>
+        透視投影：
+        <input type="button" value="前から(+Zから)" onclick="document.getElementById('front_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="後から(-Zから)" onclick="document.getElementById('back_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="上から(+Yから)" onclick="document.getElementById('top_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="下から(-Yから)" onclick="document.getElementById('bottom_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="右から(+Xから)" onclick="document.getElementById('right_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="左から(-Xから)" onclick="document.getElementById('left_view').setAttribute('set_bind','true');"/>
+        <br>
+        平行投影：
+        <input type="button" value="前から(+Zから)" onclick="document.getElementById('ortho_front_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="後から(-Zから)" onclick="document.getElementById('ortho_back_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="上から(+Yから)" onclick="document.getElementById('ortho_top_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="下から(-Yから)" onclick="document.getElementById('ortho_bottom_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="右から(+Xから)" onclick="document.getElementById('ortho_right_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="左から(-Xから)" onclick="document.getElementById('ortho_left_view').setAttribute('set_bind','true');"/>
+        <br>
+        新規視点：
+    </div>
+    <div id="str">Viewpoint</div>
+    <x3d id="x3d" style="width:80vw; height:60vw; margin:auto;" showLog="false" showStat="false">
+     
+      <scene id="scene">
+        <!-- ヘッドライトの設定 -->
+        <navigationInfo id="navi" headlight="false"></navigationInfo>
+
+        <!-- 太陽光源の設定 -->
+        <directionalLight direction="-1 -1 -1" color="1 1 1" ambientIntensity="0.3"></directionalLight>
+        <directionalLight direction="1 1 1" color="0.8 0.8 1" ambientIntensity="0.1"></directionalLight>
+
+        <!-- 背景の指定 -->
+        <background skyColor="0.1 0.1 0.2"></background>
+
+        <!-- 視点の設定 -->
+        <viewpoint id="front_view" description="front" position="0 0 12" orientation="0 1 0 0"></viewpoint>
+        <viewpoint id="back_view" description="back" position="0 0 -12" orientation="0 1 0 3.14"></viewpoint>
+        <viewpoint id="top_view" description="top" position="0 12 0" orientation="1 0 0 -1.57"></viewpoint>
+        <viewpoint id="bottom_view" description="bottom" position="0 -12 0" orientation="1 0 0 1.57"></viewpoint>
+        <viewpoint id="right_view" description="right" position="12 0 0" orientation="0 1 0 1.57"></viewpoint>
+        <viewpoint id="left_view" description="left" position="-12 0 0" orientation="0 1 0 -1.57"></viewpoint>
+
+        <OrthoViewpoint id="ortho_front_view" description="ortho_front" position="0 0 12" orientation="0 1 0 0" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_back_view" description="ortho_back" position="0 0 -12" orientation="0 1 0 3.14" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_top_view" description="ortho_top" position="0 12 0" orientation="1 0 0 -1.57" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_bottom_view" description="ortho_bottom" position="0 -12 0" orientation="1 0 0 1.57" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_right_view" description="ortho_right" position="12 0 0" orientation="0 1 0 1.57" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_left_view" description="ortho_left" position="-12 0 0" orientation="0 1 0 -1.57" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
+
+        <!-- オブジェクト1: 外側のスマホサイズフレーム（ガラスケース状の箱） -->
+        <!-- スマホ画面比率（幅3.0 : 高さ6.0 : 奥行3.0） -->
+        <transform translation="0 0 0">
+          <shape>
+            <box size="3 6 3"></box>
+            <appearance>
+              <material diffuseColor="0.2 0.6 1.0" specularColor="0.8 0.8 1.0" shininess="0.8" transparency="0.75"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- オブジェクト2: 外箱の底面プレート -->
+        <transform translation="0 -3 0">
+          <shape>
+            <box size="3.2 0.1 3.2"></box>
+            <appearance>
+              <material diffuseColor="0.3 0.3 0.3" specularColor="0.5 0.5 0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- オブジェクト3: 外箱の上面プレート -->
+        <transform translation="0 3 0">
+          <shape>
+            <box size="3.2 0.1 3.2"></box>
+            <appearance>
+              <material diffuseColor="0.3 0.3 0.3" specularColor="0.5 0.5 0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- オブジェクト4: 中に浮いている内部ボックス -->
+        <transform DEF="FloatingBox" translation="0 0 0" rotation="0.5 1 0.2 0.785">
+          <shape>
+            <box size="1.2 1.2 1.2"></box>
+            <appearance>
+              <material diffuseColor="1.0 0.3 0.2" specularColor="1.0 0.8 0.5" shininess="0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- テキスト表示 -->
+        <transform scale="0.4 0.4 0.4" translation="-1.8 -3.8 0">
+          <shape>
+            <text string='"Smartphone Glass Box" "Floating Object"'>
+              <fontstyle family="TYPEWRITER" size="1" style="BOLD"></fontstyle>
+            </text>
+            <appearance>
+              <material diffuseColor="0.8 0.9 1.0"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+      </scene>
+    </x3d>
+    <script>
+        var pos;
+        var rot;
+        var viewFunc = function(evt) {
+            pos = evt.position;
+            rot = evt.orientation;
+            text = '&lt;viewpoint id="name_view" description="name" position="' + 
+                                Math.round(pos.x*1000000.0)/1000000.0 +' '+Math.round(pos.y*1000000.0)/1000000.0+' '+Math.round(pos.z*1000000.0)/1000000.0 +
+                                '" orientation="' + Math.round(rot[0].x*1000000.0)/1000000.0+' '+Math.round(rot[0].y*1000000.0)/1000000.0+' '+Math.round(rot[0].z*1000000.0)/1000000.0+' '+Math.round(rot[1]*1000000.0)/1000000.0+'"&gt;&lt;/viewpoint&gt;';
+            document.getElementById("str").innerHTML=text;
+        };
+
+        function addIt() {
+            var scene = document.getElementById('scene');
+            for (var i = 0; i < scene.children.length; i++) {
+                if (scene.children[i].nodeName == "VIEWPOINT") {
+                    scene.children[i].addEventListener('viewpointChanged', viewFunc, false);
+                }
+            }
+        }
+
+        document.onload = addIt;
+
+        function showViewpoint() {
+            x3dom.debug.logInfo('position: ' + pos.x+' '+pos.y+' '+pos.z +'\n' +
+                                'orientation: ' + rot[0].x+' '+rot[0].y+' '+rot[0].z+' '+rot[1]);
+        }
+    </script>
+  </body>
+</html>
