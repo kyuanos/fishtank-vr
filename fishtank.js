@@ -106,6 +106,7 @@
       z-index: 9999;
       cursor: pointer;
       user-select: none;
+      pointer-events: auto; /* イベントを確実に受け取る */
       box-shadow: 0 3px 8px rgba(0,0,0,0.4);
       transition: all 0.2s ease;
       display: flex;
@@ -138,11 +139,18 @@
       }
     }
 
-    // UIクリックでON/OFFトグル切り替え
-    uiElement.addEventListener('click', () => {
+    // UIクリック/タップでON/OFFトグル切り替え（X3DOMへの横取りを抑止）
+    const toggleTracking = (e) => {
+      if (e) {
+        e.stopPropagation(); // X3DOMのマウスドラッグイベントへの横取りを防止
+        e.preventDefault();
+      }
       isTrackingEnabled = !isTrackingEnabled;
       updateUI();
-    });
+    };
+
+    // PCのマウス操作（pointerdown）とモバイルのタップ両方に対応
+    uiElement.addEventListener('pointerdown', toggleTracking);
 
     let targetX = 0, targetY = 0;
     let currentX = 0, currentY = 0;
