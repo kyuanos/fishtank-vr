@@ -2,15 +2,53 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script type='text/javascript' src='https://www.x3dom.org/download/1.8.1/x3dom.js'></script> 
     <link rel='stylesheet' type='text/css' href='https://www.x3dom.org/release/x3dom.css'></link> 
-    <script src="fishtank.js"></script>
-    <title>スマホサイズの外箱と浮遊ボックス</title>
+    <title>Anamorphic Portal Box - X3DOM 3D Box</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 15px;
+        background-color: #f8f9fa;
+      }
+      .link-button {
+        display: inline-block;
+        margin-right: 8px;
+        margin-bottom: 10px;
+        padding: 6px 12px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .link-button:hover {
+        background-color: #0056b3;
+      }
+      .buttons.group input[type="button"] {
+        margin: 2px;
+        padding: 4px 8px;
+      }
+      #str {
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        background: #eee;
+        padding: 6px;
+        word-break: break-all;
+      }
+    </style>
   </head>
   <body>
-    <h1>スマホサイズの外箱と浮遊ボックス</h1>
+    <!-- 上部リンクボタン -->
+    <a href="pingu.htm" target="_blank" class="link-button">pinguを開く</a>
+    <a href="pingu2.htm" target="_blank" class="link-button">pingu2を開く</a>
+    <a href="demobox.htm" target="_blank" class="link-button">demoboxを開く</a>
+
+    <h1>Anamorphic Portal Box (X3DOM版)</h1>
     <p>
-      作品の説明：スマホ比率（縦長）の外箱の中に、中央で浮かぶボックスを配置した作品です。<br>
+      作品の説明：画像ファイルを使用せず、X3DOMの立体形状（床・天井・左右・奥壁・外枠）と中央で浮遊・回転するボックスのみで描画したポータルボックスです。<br>
       <br>
       視点移動<br>
       左ボタンドラッグ：見回し(Rotate)<br>
@@ -20,6 +58,7 @@
       uキー：視点の上下を正す(Upright)<br>
       rキー：視点のリセット(Reset)<br>
     </p>
+
     <div class="buttons group">
         <input type="button" value="ヘッドライト ON" onclick="document.getElementById('navi').setAttribute('headlight','true');"/>
         <input type="button" value="ヘッドライト OFF" onclick="document.getElementById('navi').setAttribute('headlight','false');"/>
@@ -48,18 +87,18 @@
         新規視点：
     </div>
     <div id="str">Viewpoint</div>
+
     <x3d id="x3d" style="width:80vw; height:60vw; margin:auto;" showLog="false" showStat="false">
-     
       <scene id="scene">
         <!-- ヘッドライトの設定 -->
         <navigationInfo id="navi" headlight="false"></navigationInfo>
 
-        <!-- 太陽光源の設定 -->
+        <!-- 光源の設定（メイン光＆サブ環境光） -->
         <directionalLight direction="-1 -1 -1" color="1 1 1" ambientIntensity="0.3"></directionalLight>
-        <directionalLight direction="1 1 1" color="0.8 0.8 1" ambientIntensity="0.1"></directionalLight>
+        <directionalLight direction="1 1 1" color="0.5 0.6 0.8" ambientIntensity="0.2"></directionalLight>
 
         <!-- 背景の指定 -->
-        <background skyColor="0.1 0.1 0.2"></background>
+        <background skyColor="0.08 0.08 0.15"></background>
 
         <!-- 視点の設定 -->
         <viewpoint id="front_view" description="front" position="0 0 12" orientation="0 1 0 0"></viewpoint>
@@ -76,61 +115,96 @@
         <OrthoViewpoint id="ortho_right_view" description="ortho_right" position="12 0 0" orientation="0 1 0 1.57" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
         <OrthoViewpoint id="ortho_left_view" description="ortho_left" position="-12 0 0" orientation="0 1 0 -1.57" fieldOfView="[-5,-5,5,5]"></OrthoViewpoint>
 
-        <!-- オブジェクト1: 外側のスマホサイズフレーム（ガラスケース状の箱） -->
-        <!-- スマホ画面比率（幅3.0 : 高さ6.0 : 奥行3.0） -->
-        <transform translation="0 0 0">
-          <shape>
-            <box size="3 6 3"></box>
-            <appearance>
-              <material diffuseColor="0.2 0.6 1.0" specularColor="0.8 0.8 1.0" shininess="0.8" transparency="0.75"></material>
-            </appearance>
-          </shape>
-        </transform>
-
-        <!-- オブジェクト2: 外箱の底面プレート -->
+        <!-- ================= 外箱（ルーム構造） ================= -->
+        <!-- 床面 (4) -->
         <transform translation="0 -3 0">
           <shape>
-            <box size="3.2 0.1 3.2"></box>
+            <box size="6 0.1 6"></box>
             <appearance>
-              <material diffuseColor="0.3 0.3 0.3" specularColor="0.5 0.5 0.5"></material>
+              <material diffuseColor="0.2 0.3 0.5" specularColor="0.5 0.5 0.5" shininess="0.3"></material>
             </appearance>
           </shape>
         </transform>
 
-        <!-- オブジェクト3: 外箱の上面プレート -->
+        <!-- 天井 (2) -->
         <transform translation="0 3 0">
           <shape>
-            <box size="3.2 0.1 3.2"></box>
+            <box size="6 0.1 6"></box>
             <appearance>
-              <material diffuseColor="0.3 0.3 0.3" specularColor="0.5 0.5 0.5"></material>
+              <material diffuseColor="0.15 0.2 0.35" specularColor="0.3 0.3 0.3"></material>
             </appearance>
           </shape>
         </transform>
 
-        <!-- オブジェクト4: 中に浮いている内部ボックス -->
-        <transform DEF="FloatingBox" translation="0 0 0" rotation="0.5 1 0.2 0.785">
+        <!-- 左壁 (1) -->
+        <transform translation="-3 0 0">
           <shape>
-            <box size="1.2 1.2 1.2"></box>
+            <box size="0.1 6 6"></box>
             <appearance>
-              <material diffuseColor="1.0 0.3 0.2" specularColor="1.0 0.8 0.5" shininess="0.5"></material>
+              <material diffuseColor="0.1 0.4 0.6" specularColor="0.4 0.4 0.4"></material>
             </appearance>
           </shape>
         </transform>
 
-        <!-- テキスト表示 -->
-        <transform scale="0.4 0.4 0.4" translation="-1.8 -3.8 0">
+        <!-- 右壁 (3) -->
+        <transform translation="3 0 0">
           <shape>
-            <text string='"Smartphone Glass Box" "Floating Object"'>
-              <fontstyle family="TYPEWRITER" size="1" style="BOLD"></fontstyle>
-            </text>
+            <box size="0.1 6 6"></box>
             <appearance>
-              <material diffuseColor="0.8 0.9 1.0"></material>
+              <material diffuseColor="0.1 0.4 0.6" specularColor="0.4 0.4 0.4"></material>
             </appearance>
           </shape>
         </transform>
+
+        <!-- 奥壁 -->
+        <transform translation="0 0 -3">
+          <shape>
+            <box size="6 6 0.1"></box>
+            <appearance>
+              <material diffuseColor="0.15 0.25 0.45" specularColor="0.5 0.5 0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 外枠（ガラスの外ケース） -->
+        <transform translation="0 0 0">
+          <shape>
+            <box size="6.1 6.1 6.1"></box>
+            <appearance>
+              <material diffuseColor="0.4 0.7 1.0" specularColor="0.9 0.9 1.0" shininess="0.8" transparency="0.8"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- ================= 中央の浮遊ボックス ================= -->
+        <transform DEF="FloatingBox" translation="0 0 0">
+          <shape>
+            <box size="1.8 1.8 1.8"></box>
+            <appearance>
+              <material diffuseColor="1.0 0.4 0.2" specularColor="1.0 0.8 0.6" shininess="0.6"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 浮遊＆回転アニメーション設定 -->
+        <timeSensor DEF="Timer" cycleInterval="5" loop="true"></timeSensor>
+
+        <!-- 上下浮遊（Y軸移動） -->
+        <positionInterpolator DEF="HoverAnim" key="0 0.5 1" keyValue="0 -0.4 0, 0 0.4 0, 0 -0.4 0"></positionInterpolator>
+
+        <!-- Y軸回転 -->
+        <orientationInterpolator DEF="RotateAnim" key="0 0.5 1" keyValue="0 1 0 0, 0 1 0 3.14159, 0 1 0 6.28318"></orientationInterpolator>
+
+        <!-- アニメーションルート接続 -->
+        <route fromNode="Timer" fromField="fraction_changed" toNode="HoverAnim" toField="set_fraction"></route>
+        <route fromNode="HoverAnim" fromField="value_changed" toNode="FloatingBox" toField="set_translation"></route>
+
+        <route fromNode="Timer" fromField="fraction_changed" toNode="RotateAnim" toField="set_fraction"></route>
+        <route fromNode="RotateAnim" fromField="value_changed" toNode="FloatingBox" toField="set_rotation"></route>
 
       </scene>
     </x3d>
+
     <script>
         var pos;
         var rot;
