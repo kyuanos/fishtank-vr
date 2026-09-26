@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type='text/javascript' src='https://www.x3dom.org/download/1.8.1/x3dom.js'></script> 
+    <link rel='stylesheet' type='text/css' href='https://www.x3dom.org/release/x3dom.css'></link> 
+    <script src="fishtank.js"></script>
+    <title>Anamorphic Portal Box - X3DOM 3D Box (6.1 inch Mobile Scale)</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 15px;
+        background-color: #f8f9fa;
+      }
+      .link-button {
+        display: inline-block;
+        margin-right: 8px;
+        margin-bottom: 10px;
+        padding: 6px 12px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .link-button:hover {
+        background-color: #0056b3;
+      }
+      .buttons.group input[type="button"] {
+        margin: 2px;
+        padding: 4px 8px;
+      }
+      #str {
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        background: #eee;
+        padding: 6px;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 上部リンクボタン -->
+    <a href="pingu.htm" target="_blank" class="link-button">pinguを開く</a>
+    <a href="pingu2.htm" target="_blank" class="link-button">pingu2を開く</a>
+    <a href="demobox.htm" target="_blank" class="link-button">demoboxを開く</a>
+
+    <h1>Anamorphic Portal Box (6.1インチ実寸スケール版)</h1>
+    <p>
+      作品の説明：6.1インチスマートフォン（幅6.8cm × 高さ14.7cm × 奥行10cm）の物理寸法に合わせて実寸設計されたポータルボックスです。<br>
+      <br>
+      視点移動<br>
+      左ボタンドラッグ：見回し(Rotate)<br>
+      真ん中ボタンドラッグ または Ctrl+左ボタンドラッグ：平行移動(Pan)<br>
+      右ボタンドラッグ または ホイール：ズーム(Zoom)<br>
+      aキー：オブジェクトを全部見る(Show all)<br>
+      uキー：視点の上下を正す(Upright)<br>
+      rキー：視点のリセット(Reset)<br>
+    </p>
+
+    <div class="buttons group">
+        <input type="button" value="ヘッドライト ON" onclick="document.getElementById('navi').setAttribute('headlight','true');"/>
+        <input type="button" value="ヘッドライト OFF" onclick="document.getElementById('navi').setAttribute('headlight','false');"/>
+        <input type="button" value="デバッグ ON" onclick="document.getElementById('x3d').runtime.debug(true);"/>
+        <input type="button" value="デバッグ OFF" onclick="document.getElementById('x3d').runtime.debug(false);"/>
+        <br>
+        <input type="button" value="前の視点" onclick="document.getElementById('x3d').runtime.prevView();"/>
+        <input type="button" value="次の視点" onclick="document.getElementById('x3d').runtime.nextView();"/>
+        <br>
+        透視投影：
+        <input type="button" value="前から(+Zから)" onclick="document.getElementById('front_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="後から(-Zから)" onclick="document.getElementById('back_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="上から(+Yから)" onclick="document.getElementById('top_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="下から(-Yから)" onclick="document.getElementById('bottom_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="右から(+Xから)" onclick="document.getElementById('right_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="左から(-Xから)" onclick="document.getElementById('left_view').setAttribute('set_bind','true');"/>
+        <br>
+        平行投影：
+        <input type="button" value="前から(+Zから)" onclick="document.getElementById('ortho_front_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="後から(-Zから)" onclick="document.getElementById('ortho_back_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="上から(+Yから)" onclick="document.getElementById('ortho_top_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="下から(-Yから)" onclick="document.getElementById('ortho_bottom_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="右から(+Xから)" onclick="document.getElementById('ortho_right_view').setAttribute('set_bind','true');"/>
+        <input type="button" value="左から(-Xから)" onclick="document.getElementById('ortho_left_view').setAttribute('set_bind','true');"/>
+    </div>
+    <div id="str">Viewpoint</div>
+
+    <!-- スマホ画面アスペクト比（19.5:9）に合わせた表示エリア -->
+    <x3d id="x3d" style="width:280px; height:600px; margin:auto; display:block;" showLog="false" showStat="false">
+      <scene id="scene">
+        <!-- ナビゲーション設定：操作スピードを実寸用に落とし、回転・移動を制限 -->
+        <navigationInfo id="navi" headlight="false" type='"EXAMINE" "NONE"' speed="0.1"></navigationInfo>
+
+        <!-- 光源の設定（メイン光＆サブ環境光） -->
+        <directionalLight direction="-1 -1 -1" color="1 1 1" ambientIntensity="0.3"></directionalLight>
+        <directionalLight direction="1 1 1" color="0.5 0.6 0.8" ambientIntensity="0.2"></directionalLight>
+
+        <!-- 背景の指定 -->
+        <background skyColor="0.08 0.08 0.15"></background>
+
+        <!-- 視点の設定（距離を0.25m＝25cmに調整） -->
+        <viewpoint id="front_view" description="front" position="0 0 0.25" orientation="0 1 0 0"></viewpoint>
+        <viewpoint id="back_view" description="back" position="0 0 -0.25" orientation="0 1 0 3.14"></viewpoint>
+        <viewpoint id="top_view" description="top" position="0 0.25 0" orientation="1 0 0 -1.57"></viewpoint>
+        <viewpoint id="bottom_view" description="bottom" position="0 -0.25 0" orientation="1 0 0 1.57"></viewpoint>
+        <viewpoint id="right_view" description="right" position="0.25 0 0" orientation="0 1 0 1.57"></viewpoint>
+        <viewpoint id="left_view" description="left" position="-0.25 0 0" orientation="0 1 0 -1.57"></viewpoint>
+
+        <OrthoViewpoint id="ortho_front_view" description="ortho_front" position="0 0 0.25" orientation="0 1 0 0" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_back_view" description="ortho_back" position="0 0 -0.25" orientation="0 1 0 3.14" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_top_view" description="ortho_top" position="0 0.25 0" orientation="1 0 0 -1.57" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_bottom_view" description="ortho_bottom" position="0 -0.25 0" orientation="1 0 0 1.57" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_right_view" description="ortho_right" position="0.25 0 0" orientation="0 1 0 1.57" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
+        <OrthoViewpoint id="ortho_left_view" description="ortho_left" position="-0.25 0 0" orientation="0 1 0 -1.57" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
+
+        <!-- ================= 外箱（6.1インチ実寸ルーム構造） ================= -->
+        <!-- 床面 (-Y) -->
+        <transform translation="0 -0.0735 -0.05">
+          <shape>
+            <box size="0.068 0.002 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.2 0.3 0.5" specularColor="0.5 0.5 0.5" shininess="0.3"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 天井 (+Y) -->
+        <transform translation="0 0.0735 -0.05">
+          <shape>
+            <box size="0.068 0.002 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.15 0.2 0.35" specularColor="0.3 0.3 0.3"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 左壁 (-X) -->
+        <transform translation="-0.034 0 -0.05">
+          <shape>
+            <box size="0.002 0.147 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.1 0.4 0.6" specularColor="0.4 0.4 0.4"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 右壁 (+X) -->
+        <transform translation="0.034 0 -0.05">
+          <shape>
+            <box size="0.002 0.147 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.1 0.4 0.6" specularColor="0.4 0.4 0.4"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 奥壁 (-Z) -->
+        <transform translation="0 0 -0.100">
+          <shape>
+            <box size="0.068 0.147 0.002"></box>
+            <appearance>
+              <material diffuseColor="0.15 0.25 0.45" specularColor="0.5 0.5 0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 外枠（ディスプレイ開口フレーム） -->
+        <transform translation="0 0 -0.05">
+          <shape>
+            <box size="0.069 0.148 0.101"></box>
+            <appearance>
+              <material diffuseColor="0.4 0.7 1.0" specularColor="0.9 0.9 1.0" shininess="0.8" transparency="0.85"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- ================= 中央の浮遊ボックス (2.5cm) ================= -->
+        <transform DEF="FloatingBox" translation="0 0 -0.05">
+          <shape>
+            <box size="0.025 0.025 0.025"></box>
+            <appearance>
+              <material diffuseColor="1.0 0.4 0.2" specularColor="1.0 0.8 0.6" shininess="0.6"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 浮遊＆回転アニメーション設定 -->
+        <timeSensor DEF="Timer" cycleInterval="5" loop="true"></timeSensor>
+
+        <!-- 上下浮遊（Y軸移動） -->
+        <positionInterpolator DEF="HoverAnim" key="0 0.5 1" keyValue="0 -0.01 -0.05, 0 0.01 -0.05, 0 -0.01 -0.05"></positionInterpolator>
+
+        <!-- Y軸回転 -->
+        <orientationInterpolator DEF="RotateAnim" key="0 0.5 1" keyValue="0 1 0 0, 0 1 0 3.14159, 0 1 0 6.28318"></orientationInterpolator>
+
+        <!-- アニメーションルート接続 -->
+        <route fromNode="Timer" fromField="fraction_changed" toNode="HoverAnim" toField="set_fraction"></route>
+        <route fromNode="HoverAnim" fromField="value_changed" toNode="FloatingBox" toField="set_translation"></route>
+
+        <route fromNode="Timer" fromField="fraction_changed" toNode="RotateAnim" toField="set_fraction"></route>
+        <route fromNode="RotateAnim" fromField="value_changed" toNode="FloatingBox" toField="set_rotation"></route>
+
+      </scene>
+    </x3d>
+
+    <script>
+        var pos;
+        var rot;
+        var viewFunc = function(evt) {
+            pos = evt.position;
+            rot = evt.orientation;
+            text = '&lt;viewpoint id="name_view" description="name" position="' + 
+                                Math.round(pos.x*1000000.0)/1000000.0 +' '+Math.round(pos.y*1000000.0)/1000000.0+' '+Math.round(pos.z*1000000.0)/1000000.0 +
+                                '" orientation="' + Math.round(rot[0].x*1000000.0)/1000000.0+' '+Math.round(rot[0].y*1000000.0)/1000000.0+' '+Math.round(rot[0].z*1000000.0)/1000000.0+' '+Math.round(rot[1]*1000000.0)/1000000.0+'"&gt;&lt;/viewpoint&gt;';
+            document.getElementById("str").innerHTML=text;
+        };
+
+        function addIt() {
+            var scene = document.getElementById('scene');
+            for (var i = 0; i < scene.children.length; i++) {
+                if (scene.children[i].nodeName == "VIEWPOINT") {
+                    scene.children[i].addEventListener('viewpointChanged', viewFunc, false);
+                }
+            }
+        }
+
+        document.onload = addIt;
+
+        function showViewpoint() {
+            x3dom.debug.logInfo('position: ' + pos.x+' '+pos.y+' '+pos.z +'\n' +
+                                'orientation: ' + rot[0].x+' '+rot[0].y+' '+rot[0].z+' '+rot[1]);
+        }
+    </script>
+  </body>
+</html>
