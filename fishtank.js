@@ -11,67 +11,82 @@
     });
   }
 
-  // 2. X3DOMの行列計算パイプライン拡張（Off-Axis射影 ＆ Z軸距離同期）
+  // 2. X3DOMの行列計算パイプライン拡張（厳密なOff-Axis透視射影）
   function patchX3DOMPipeline() {
     if (typeof x3dom !== 'undefined' && x3dom.nodeTypes && x3dom.nodeTypes.Viewpoint) {
       if (!window.ftvrPatched) {
 
-        // A. ビュー行列（View Matrix）の拡張
-        // X, Y の左右上下の顔移動に加え、Z（距離の変化）も ViewMatrix のカメラ座標へ反映させる
+        // A. ビュー行列（View Matrix）の拡張：カメラ位置を目（Px, Py, Pz）に配置
         const origGetView = x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix;
         x3dom.nodeTypes.Viewpoint.prototype.getViewMatrix = function() {
           const mat = origGetView.call(this);
-          if (window.ftvrOffset) {
-            const offsetX = window.ftvrOffset.x || 0;
-            const offsetY = window.ftvrOffset.y || 0;
-            const offsetZ = window.ftvrOffset.z || 0;
+          if (window.ftvrPos) {
+            const Px = window.ftvrPos.x || 0;
+            const Py = window.ftvrPos.y || 0;
+            const Pz = window.ftvrPos.z || 0.35;
 
-            if (offsetX !== 0 || offsetY !== 0 || offsetZ !== 0) {
-              if (x3dom.fields && x3dom.fields.SFMatrix4f && x3dom.fields.SFMatrix4f.translation) {
-                // カメラの位置を X, Y, Z すべて顔の変位に合わせて並進移動
-                const trans = x3dom.fields.SFMatrix4f.translation(
-                  new x3dom.fields.SFVec3f(-offsetX, -offsetY, -offsetZ)
-                );
-                return trans.mult(mat);
-              } else {
-                mat._03 -= offsetX;
-                mat._13 -= offsetY;
-                mat._23 -= offsetZ;
-              }
+            if (x3dom.fields && x3dom.fields.SFMatrix4f && x3dom.fields.SFMatrix4f.translation) {
+              // 画面中心(0,0,0)に対する視点のオフセット位置へ平行移動
+              const trans = x3dom.fields.SFMatrix4f.translation(
+                new x3dom.fields.SFVec3f(-Px, -Py, -(Pz - 0.35))
+              );
+              return trans.mult(mat);
+            } else {
+              mat._03 -= Px;
+              mat._13 -= Py;
+              mat._23 -= (Pz - 0.35);
             }
           }
           return mat;
         };
 
-        // B. 投影行列（Projection Matrix）の拡張
+        // B. 投影行列（Projection Matrix）の拡張：完全な Off-Axis Frustum の計算
         const origGetProj = x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix;
         x3dom.nodeTypes.Viewpoint.prototype.getProjectionMatrix = function(aspect) {
-          const mat = origGetProj.call(this, aspect);
-          if (window.ftvrOffset) {
-            const fov = window.ftvrDynamicFov || this._vf.fieldOfView || 0.785398;
-            
-            // FOVの変化に応じて投影行列の透視倍率（ズーム感）を動的更新
-            const cotan = 1.0 / Math.tan(fov / 2.0);
-            mat._11 = cotan;          // Y軸透視成分
-            mat._00 = cotan / aspect;  // X軸透視成分
+          if (window.ftvrPos) {
+            const Px = window.ftvrPos.x || 0;
+            const Py = window.ftvrPos.y || 0;
+            const Pz = Math.max(window.ftvrPos.z || 0.35, 0.05); // 0除算防止
 
-            // カメラからオブジェクトまでの基準距離（baseD）を算出
-            let baseD = 10.0;
-            if (this._vf && this._vf.position) {
-              const pos = this._vf.position;
-              const d = Math.hypot(pos.x, pos.y, pos.z);
-              if (d > 0.001) baseD = d;
-            }
-            
-            // 仮想画面の縦横幅（screenH, screenW）を計算
-            const screenH = 2.0 * baseD * Math.tan(fov / 2.0);
-            const screenW = screenH * aspect;
-            
-            // 投影行列のシアー成分（_02, _12）を書き換えて領域を台形に歪ませる
-            mat._02 = -(2.0 * window.ftvrOffset.x) / screenW;
-            mat._12 = -(2.0 * window.ftvrOffset.y) / screenH;
+            // 6.1インチ画面の物理サイズ (m)
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const W = isLandscape ? 0.147 : 0.068;
+            const H = isLandscape ? 0.068 : 0.147;
+
+            const near = 0.01;
+            const far = 100.0;
+
+            // 視点(Px, Py, Pz)から画面枠までの近平面上における開口領域(L, R, B, T)を算出
+            const L = ((-W / 2.0) - Px) * (near / Pz);
+            const R = ((W / 2.0) - Px) * (near / Pz);
+            const B = ((-H / 2.0) - Py) * (near / Pz);
+            const T = ((H / 2.0) - Py) * (near / Pz);
+
+            // Off-Axis 透視投影行列の生成
+            const mat = new x3dom.fields.SFMatrix4f();
+            mat._00 = (2.0 * near) / (R - L);
+            mat._01 = 0;
+            mat._02 = (R + L) / (R - L);
+            mat._03 = 0;
+
+            mat._10 = 0;
+            mat._11 = (2.0 * near) / (T - B);
+            mat._12 = (T + B) / (T - B);
+            mat._13 = 0;
+
+            mat._20 = 0;
+            mat._21 = 0;
+            mat._22 = -(far + near) / (far - near);
+            mat._23 = -(2.0 * far * near) / (far - near);
+
+            mat._30 = 0;
+            mat._31 = 0;
+            mat._32 = -1.0;
+            mat._33 = 0;
+
+            return mat;
           }
-          return mat;
+          return origGetProj.call(this, aspect);
         };
 
         window.ftvrPatched = true;
@@ -99,10 +114,9 @@
     let isTrackingEnabled = true;
 
     // リアルタイム推定距離(m)の保持用変数
-    let currentDistanceMeters = 0;
-    const baseDistanceMeters = 0.35; // 基準となる閲覧距離（35cm想定）
+    let currentDistanceMeters = 0.35;
 
-    // クリック可能なUIボタンの生成
+    // UIボタンの生成
     const uiElement = document.createElement('div');
     uiElement.id = 'ftvr-ui';
     uiElement.style.cssText = `
@@ -131,8 +145,7 @@
 
     const statusElem = document.getElementById('ftvr-status');
 
-    // UIの表示更新ルーチン
-    function updateUI(statusText) {
+    function updateUI() {
       const distStr = currentDistanceMeters > 0 ? `${currentDistanceMeters.toFixed(2)} m` : '-- m';
 
       if (!isTrackingEnabled) {
@@ -152,7 +165,6 @@
       }
     }
 
-    // UIクリック/タップでON/OFFトグル切り替え
     const toggleTracking = (e) => {
       if (e) {
         e.stopPropagation();
@@ -164,65 +176,57 @@
 
     uiElement.addEventListener('pointerdown', toggleTracking);
 
-    let targetX = 0, targetY = 0, targetZ = 0;
-    let currentX = 0, currentY = 0, currentZ = 0;
+    let targetPx = 0, targetPy = 0, targetPz = 0.35;
+    let currentPx = 0, currentPy = 0, currentPz = 0.35;
 
     // MediaPipe FaceMesh 設定
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
-    
-    // 鼻の座標からズレ量を計算する部分およびデバイスまでの距離・動的FOV計算処理
+
     faceMesh.onResults((results) => {
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
         const nose = landmarks[1];
 
-        // 瞳のランドマークを取得
         const leftEye = landmarks[468] || landmarks[33];
         const rightEye = landmarks[473] || landmarks[263];
 
         const vw = videoElement.videoWidth || 640;
         const vh = videoElement.videoHeight || 480;
 
-        // ★【修正部】画像傾き・解像度アスペクト補正付きの瞳間距離計算
-        // 縦方向の差分(dy)をカメラ縦横比(vh/vw)で正規化補正し、回転しても一定のピクセル距離にする
+        // 解像度補正付き両眼ピクセル距離
         const normDx = rightEye.x - leftEye.x;
         const normDy = (rightEye.y - leftEye.y) * (vh / vw);
         const distPx = Math.hypot(normDx, normDy) * vw;
 
         if (distPx > 0) {
-          const realIPD = 0.063; // 成人の平均瞳孔間距離 (6.3cm)
-          const focalLength = vw * 0.85; // 焦点距離(px)
+          const realIPD = 0.063; // 6.3cm
+          const focalLength = vw * 0.85;
           const calculatedDistance = (realIPD * focalLength) / distPx;
-          
-          currentDistanceMeters = currentDistanceMeters === 0 
-            ? calculatedDistance 
+
+          currentDistanceMeters = currentDistanceMeters === 0
+            ? calculatedDistance
             : currentDistanceMeters * 0.85 + calculatedDistance * 0.15;
-
-          // ★【修正部】画面の向き（縦持ち・横持ち）を判定して画面高さを自動切換
-          const isLandscape = window.innerWidth > window.innerHeight;
-          const estimatedScreenHeightMeters = isLandscape ? 0.068 : 0.147; // 6.1インチ画面（横: 6.8cm, 縦: 14.7cm）
-
-          if (currentDistanceMeters > 0.05) {
-            window.ftvrDynamicFov = 2.0 * Math.atan((estimatedScreenHeightMeters / 2.0) / currentDistanceMeters);
-          }
         }
 
         if (isTrackingEnabled) {
-          const trackingGain = 0.15; // 実寸(m)スケール感度
-          targetX = -(nose.x - 0.5) * trackingGain;
-          targetY = -(nose.y - 0.5) * trackingGain;
+          // Webカメラ画像上の位置(0~1)をメートル単位の物理座標(Px, Py, Pz)へ直結変換
+          const Pz = Math.max(currentDistanceMeters, 0.10);
           
-          // 基準距離（35cm）からの前後移動差分（Z変位）を計算
-          if (currentDistanceMeters > 0) {
-            targetZ = (currentDistanceMeters - baseDistanceMeters) * 0.5;
-          }
+          // カメラ画角(約60度)から画面面における顔の物理X,Y位置(m)を算出
+          const camFovRad = 1.047; // 60 deg
+          const visibleW = 2.0 * Pz * Math.tan(camFovRad / 2.0);
+          const visibleH = visibleW * (vh / vw);
+
+          targetPx = -(nose.x - 0.5) * visibleW;
+          targetPy = -(nose.y - 0.5) * visibleH;
+          targetPz = Pz;
         } else {
-          targetX = 0;
-          targetY = 0;
-          targetZ = 0;
+          targetPx = 0;
+          targetPy = 0;
+          targetPz = 0.35;
         }
 
         updateUI();
@@ -247,17 +251,14 @@
       return;
     }
 
-    // 4. フレームごとに滑らかに近づける部分
+    // 4. フレーム補間描画ループ
     function renderLoop() {
-      currentX += (targetX - currentX) * 0.12;
-      currentY += (targetY - currentY) * 0.12;
-      currentZ += (targetZ - currentZ) * 0.12;
+      currentPx += (targetPx - currentPx) * 0.15;
+      currentPy += (targetPy - currentPy) * 0.15;
+      currentPz += (targetPz - currentPz) * 0.15;
 
-      if (Math.abs(currentX) < 0.0001) currentX = 0;
-      if (Math.abs(currentY) < 0.0001) currentY = 0;
-      if (Math.abs(currentZ) < 0.0001) currentZ = 0;
-
-      window.ftvrOffset = { x: currentX, y: currentY, z: currentZ };
+      // 算出された視点の絶対3次元位置 (m) パイプラインへ共有
+      window.ftvrPos = { x: currentPx, y: currentPy, z: currentPz };
 
       const x3dElem = document.querySelector('x3d');
       if (x3dElem && x3dElem.runtime && x3dElem.runtime.triggerRedraw) {
