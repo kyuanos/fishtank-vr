@@ -90,8 +90,8 @@
     <!-- スマホ画面アスペクト比（19.5:9）に合わせた表示エリア -->
     <x3d id="x3d" style="width:280px; height:600px; margin:auto; display:block;" showLog="false" showStat="false">
       <scene id="scene">
-        <!-- ナビゲーション設定：操作スピードを実寸用に落とし、回転・移動を制限 -->
-        <navigationInfo id="navi" headlight="false" type='"EXAMINE" "NONE"' speed="0.1"></navigationInfo>
+        <!-- ナビゲーション設定：視点固定（ドラッグ回転・移動を無効化） -->
+        <navigationInfo id="navi" headlight="false" type='"NONE"'></navigationInfo>
 
         <!-- 光源の設定（メイン光＆サブ環境光） -->
         <directionalLight direction="-1 -1 -1" color="1 1 1" ambientIntensity="0.3"></directionalLight>
@@ -176,7 +176,7 @@
           </shape>
         </transform>
 
-        <!-- ================= 中央の浮遊ボックス (2.5cm) ================= -->
+        <!-- ================= 中央のボックス (2.5cm) その場にとどまる ================= -->
         <transform DEF="FloatingBox" translation="0 0 -0.05">
           <shape>
             <box size="0.025 0.025 0.025"></box>
@@ -185,22 +185,6 @@
             </appearance>
           </shape>
         </transform>
-
-        <!-- 浮遊＆回転アニメーション設定 -->
-        <timeSensor DEF="Timer" cycleInterval="5" loop="true"></timeSensor>
-
-        <!-- 上下浮遊（Y軸移動） -->
-        <positionInterpolator DEF="HoverAnim" key="0 0.5 1" keyValue="0 -0.01 -0.05, 0 0.01 -0.05, 0 -0.01 -0.05"></positionInterpolator>
-
-        <!-- Y軸回転 -->
-        <orientationInterpolator DEF="RotateAnim" key="0 0.5 1" keyValue="0 1 0 0, 0 1 0 3.14159, 0 1 0 6.28318"></orientationInterpolator>
-
-        <!-- アニメーションルート接続 -->
-        <route fromNode="Timer" fromField="fraction_changed" toNode="HoverAnim" toField="set_fraction"></route>
-        <route fromNode="HoverAnim" fromField="value_changed" toNode="FloatingBox" toField="set_translation"></route>
-
-        <route fromNode="Timer" fromField="fraction_changed" toNode="RotateAnim" toField="set_fraction"></route>
-        <route fromNode="RotateAnim" fromField="value_changed" toNode="FloatingBox" toField="set_rotation"></route>
 
       </scene>
     </x3d>
