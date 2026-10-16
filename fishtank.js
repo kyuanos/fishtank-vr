@@ -241,10 +241,13 @@
     // 視点追従 ON/OFF 状態フラグ
     let isTrackingEnabled = true;
 
+    // タブの折りたたみ状態フラグ（false: 展開, true: 折りたたみ）
+    let isCollapsed = false;
+
     // リアルタイム推定距離(m)の保持用変数
     let currentDistanceMeters = 0.35;
 
-    // UIボタンの生成
+    // UIボタン（タブ）の生成
     const uiElement = document.createElement('div');
     uiElement.id = 'ftvr-ui';
     uiElement.style.cssText = `
@@ -253,7 +256,7 @@
       right: 10px;
       background: rgba(0, 0, 0, 0.85);
       color: #6bffb8;
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 8px;
       font-family: sans-serif;
       font-size: 0.8rem;
@@ -267,20 +270,87 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      max-width: 90vw;
     `;
-    uiElement.innerHTML = '<span id="ftvr-status">FishTank VR 初期化中...</span>';
-    document.body.appendChild(uiElement);
 
-    const statusElem = document.getElementById('ftvr-status');
+    // ヘッダー行（視点追従表示 ＋ 折りたたみボタン）
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    `;
+
+    const statusElem = document.createElement('div');
+    statusElem.id = 'ftvr-status';
+    statusElem.innerHTML = 'FishTank VR 初期化中...';
+
+    // タブに引っ付いた折りたたみトグルボタン
+    const collapseBtn = document.createElement('button');
+    collapseBtn.id = 'ftvr-collapse-btn';
+    collapseBtn.title = '詳細情報の表示/折りたたみを切り替え';
+    collapseBtn.innerHTML = '▲';
+    collapseBtn.style.cssText = `
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: inherit;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.75rem;
+      line-height: 1.2;
+      cursor: pointer;
+      outline: none;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    `;
+    collapseBtn.addEventListener('mouseenter', () => {
+      collapseBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+    });
+    collapseBtn.addEventListener('mouseleave', () => {
+      collapseBtn.style.background = 'rgba(255, 255, 255, 0.15)';
+    });
+
+    headerRow.appendChild(statusElem);
+    headerRow.appendChild(collapseBtn);
+    uiElement.appendChild(headerRow);
+
+    // 詳細情報コンテナ（デバッグ行・距離）
+    const detailsElem = document.createElement('div');
+    detailsElem.id = 'ftvr-details';
+    detailsElem.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 4px;
+      margin-top: 2px;
+      word-break: break-all;
+    `;
+    uiElement.appendChild(detailsElem);
+
+    document.body.appendChild(uiElement);
 
     function updateUI() {
       const distStr = currentDistanceMeters > 0 ? `${currentDistanceMeters.toFixed(2)} m` : '-- m';
 
+      // 折りたたみ状態の切り替え
+      if (isCollapsed) {
+        detailsElem.style.display = 'none';
+        collapseBtn.innerHTML = '▼';
+        collapseBtn.title = '詳細を展開';
+      } else {
+        detailsElem.style.display = 'flex';
+        collapseBtn.innerHTML = '▲';
+        collapseBtn.title = '詳細を折りたたむ';
+      }
+
       if (!isTrackingEnabled) {
         uiElement.style.background = 'rgba(60, 60, 60, 0.85)';
         uiElement.style.color = '#ccc';
-        statusElem.innerHTML = `
-          <div>📷 視点追従: <b style="color:#ff6b6b;">OFF</b> (クリックでON)</div>
+        collapseBtn.style.color = '#ccc';
+        statusElem.innerHTML = `<div>📷 視点追従: <b style="color:#ff6b6b;">OFF</b> (クリックでON)</div>`;
+        detailsElem.innerHTML = `
           <div style="font-size:0.75rem; color:#aaa;">${debugStr1}</div>
           <div style="font-size:0.75rem; color:#aaa;">${debugStr2}</div>
           <div style="font-size:0.75rem; color:#aaa;">${debugStr3}</div>
@@ -289,8 +359,9 @@
       } else {
         uiElement.style.background = 'rgba(0, 0, 0, 0.85)';
         uiElement.style.color = '#6bffb8';
-        statusElem.innerHTML = `
-          <div>📷 視点追従: <b style="color:#6bffb8;">ON</b> (クリックでOFF)</div>
+        collapseBtn.style.color = '#6bffb8';
+        statusElem.innerHTML = `<div>📷 視点追従: <b style="color:#6bffb8;">ON</b> (クリックでOFF)</div>`;
+        detailsElem.innerHTML = `
           <div style="font-size:0.75rem; color:#6bffb8;">${debugStr1}</div>
           <div style="font-size:0.75rem; color:#6bffb8;">${debugStr2}</div>
           <div style="font-size:0.75rem; color:#6bffb8;">${debugStr3}</div>
@@ -299,6 +370,20 @@
       }
     }
 
+    // 折りたたみボタンのクリック処理（カメラON/OFFトグルの発火を防止）
+    const toggleCollapse = (e) => {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      isCollapsed = !isCollapsed;
+      updateUI();
+    };
+
+    collapseBtn.addEventListener('pointerdown', toggleCollapse);
+    collapseBtn.addEventListener('click', (e) => e.stopPropagation());
+
+    // タブ全体のカメラON/OFFトグル処理
     const toggleTracking = (e) => {
       if (e) {
         e.stopPropagation();
