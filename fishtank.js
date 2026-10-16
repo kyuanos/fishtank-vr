@@ -1,5 +1,5 @@
 (function () {
-  // 1. MediaPipe FaceMesh ライブラリの動的インポート
+  // 1. MediaPipe FaceMesh ライブラリの動的インポート1
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
