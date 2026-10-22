@@ -61,7 +61,7 @@
         <background groundColor="1 1 1" skyColor="0.53725490196 0.74117647058 0.87058823529"></background>
 
         <!-- 視点の設定（複数可）-->
-		<viewpoint id="pingu_view" description="pingu" position="0 0.05 0.30" orientation="0 1 0 0"></viewpoint>
+		<viewpoint id="pingu_view" description="pingu" position="0 0 0" orientation="0 1 0 0"></viewpoint>
         <!-- viewpoint id="pingu_view" description="pingu" position="0.130407 3.476919 13.181845" orientation="-0.999988 0.000619 0.004782 0.203131"></viewpoint -->
         <viewpoint id="front_view" description="front" position="0 1.25 10" orientation="0 1 0 0"></viewpoint>
         <viewpoint id="back_view" description="back" position="0 1.25 -10" orientation="0 1 0 3.14"></viewpoint>
@@ -73,6 +73,67 @@
         <viewpoint id="nankyoku_view" description="nankyoku" position="-7.446712 -2.009147 46.300893" orientation="0.067244 -0.846492 -0.528137 0.374984"></viewpoint>
         <viewpoint id="wide_view" description="wide" position="-2.934003 0.480695 35.4967" orientation="0.451689 -0.89185 -0.024102 0.092609"></viewpoint>
         
+		================= 外箱（6.1インチ実寸ルーム構造） =================
+        <!-- 床面 (-Y) -->
+        <transform translation="0 -0.0735 -0.05">
+          <shape>
+            <box size="0.068 0.002 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.2 0.3 0.5" specularColor="0.5 0.5 0.5" shininess="0.3"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 天井 (+Y) -->
+        <transform translation="0 0.0735 -0.05">
+          <shape>
+            <box size="0.068 0.002 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.15 0.2 0.35" specularColor="0.3 0.3 0.3"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 左壁 (-X) -->
+        <transform translation="-0.034 0 -0.05">
+          <shape>
+            <box size="0.002 0.147 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.1 0.4 0.6" specularColor="0.4 0.4 0.4"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 右壁 (+X) -->
+        <transform translation="0.034 0 -0.05">
+          <shape>
+            <box size="0.002 0.147 0.100"></box>
+            <appearance>
+              <material diffuseColor="0.1 0.4 0.6" specularColor="0.4 0.4 0.4"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 奥壁 (-Z) -->
+        <transform translation="0 0 -0.100">
+          <shape>
+            <box size="0.068 0.147 0.002"></box>
+            <appearance>
+              <material diffuseColor="0.15 0.25 0.45" specularColor="0.5 0.5 0.5"></material>
+            </appearance>
+          </shape>
+        </transform>
+
+        <!-- 外枠（ディスプレイ開口フレーム） -->
+        <transform translation="0 0 -0.05">
+          <shape>
+            <box size="0.069 0.148 0.101"></box>
+            <appearance>
+              <material diffuseColor="0.4 0.7 1.0" specularColor="0.9 0.9 1.0" shininess="0.8" transparency="0.85"></material>
+            </appearance>
+          </shape>
+        </transform>
+
         <!-- オブジェクト -->
 	    <transform scale="0.016 0.016 0.016">
 			<transform rotation="0 1 0 0.52333333333"><!--全身-->
