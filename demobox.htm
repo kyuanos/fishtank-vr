@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type='text/javascript' src='https://www.x3dom.org/download/1.8.1/x3dom.js'></script> 
+    <script type='text/javascript' src='https://www.x3dom.org/download/1.8.1/x3dom-full.js'></script> 
     <link rel='stylesheet' type='text/css' href='https://www.x3dom.org/release/x3dom.css'></link> 
     <script src="fishtank.js"></script>
     <title>Anamorphic Portal Box - X3DOM 3D Box (6.1 inch Mobile Scale)</title>
     <style>
       body {
         font-family: sans-serif;
-        margin: 15px;
+        margin: 0px;
         background-color: #f8f9fa;
       }
       .link-button {
@@ -88,7 +88,7 @@
     <div id="str">Viewpoint</div>
 
     <!-- スマホ画面アスペクト比（19.5:9）に合わせた表示エリア -->
-    <x3d id="x3d" style="width:280px; height:600px; margin:auto; display:block;" showLog="false" showStat="false">
+    <x3d id="x3d" style="width:100vw; height:100vh; margin:auto; display:block;" showLog="false" showStat="false">
       <scene id="scene">
         <!-- ナビゲーション設定：視点固定（ドラッグ回転・移動を無効化） -->
         <navigationInfo id="navi" headlight="false" type='"NONE"'></navigationInfo>
@@ -101,7 +101,7 @@
         <background skyColor="0.08 0.08 0.15"></background>
 
         <!-- 視点の設定（距離を0.25m＝25cmに調整） -->
-        <viewpoint id="front_view" description="front" position="0 0 0.25" orientation="0 1 0 0"></viewpoint>
+        <viewpoint id="front_view" description="front" position="0 0 7" orientation="0 1 0 0"></viewpoint>
         <viewpoint id="back_view" description="back" position="0 0 -0.25" orientation="0 1 0 3.14"></viewpoint>
         <viewpoint id="top_view" description="top" position="0 0.25 0" orientation="1 0 0 -1.57"></viewpoint>
         <viewpoint id="bottom_view" description="bottom" position="0 -0.25 0" orientation="1 0 0 1.57"></viewpoint>
@@ -115,7 +115,7 @@
         <OrthoViewpoint id="ortho_right_view" description="ortho_right" position="0.25 0 0" orientation="0 1 0 1.57" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
         <OrthoViewpoint id="ortho_left_view" description="ortho_left" position="-0.25 0 0" orientation="0 1 0 -1.57" fieldOfView="[-0.05,-0.1,0.05,0.1]"></OrthoViewpoint>
 
-        <!-- ================= 外箱（6.1インチ実寸ルーム構造） ================= -->
+        ================= 外箱（6.1インチ実寸ルーム構造） =================
         <!-- 床面 (-Y) -->
         <transform translation="0 -0.0735 -0.05">
           <shape>
@@ -177,14 +177,433 @@
         </transform>
 
         <!-- ================= 中央のボックス (2.5cm) その場にとどまる ================= -->
-        <transform DEF="FloatingBox" translation="0 0 -0.05">
+        <!-- <transform DEF="FloatingBox" translation="0 0 -0.05">
           <shape>
             <box size="0.025 0.025 0.025"></box>
             <appearance>
               <material diffuseColor="1.0 0.4 0.2" specularColor="1.0 0.8 0.6" shininess="0.6"></material>
             </appearance>
           </shape>
+        </transform> -->
+        <!-- <transform DEF="FloatingBox" translation="0 -0.03 -0.02">
+          <shape>
+            <box size="0.04 0.04 0.04"></box>
+            <appearance>
+              <material diffuseColor="1.0 0.4 0.2" specularColor="1.0 0.8 0.6" shininess="0.6"></material>
+            </appearance>
+          </shape>
         </transform>
+
+        <transform scale="0.02 0.02 0.02" translation="0 0.03 -0.02">
+          <shape>
+            <cone></cone>
+            <appearance>
+              <material diffuseColor="1.0 0.4 0.2" specularColor="1.0 0.8 0.6" shininess="0.6"></material>
+            </appearance>
+          </shape>
+        </transform> -->
+		<transform scale="0.01 0.01 0.01" translation="0 -0.053 -0.04">
+			<transform rotation="0 1 0 0.52333333333"><!--全身-->
+			<transform translation="0 0.5 0"><!--顔と胴体-->
+				<transform translation="0 4 0.5"><!--頭-->
+				<transform rotation="0 1 0 -0.52333333333">
+					<transform rotation="0 0 1 -0.17444444444">
+					<transform scale="1 0.8 0.8" rotation="0 0 1 0" translation="0 0 0"><!--顔-->
+						<shape>
+						<Sphere radius="1"></Sphere>
+						<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					
+					<transform scale="0.41 0.25 0.4" rotation="0 0 1 0" translation="0 -0.2 0.7"><!--くちばし-->
+						<shape>
+						<Sphere radius="1"></Sphere>
+						<appearance>
+							<material diffuseColor="1 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					
+					<transform scale="0.2 0.2 0.1" rotation="0 1 0 0.52333333333" translation="0.5 0.14 0.6"><!--左目-->
+						<shape>
+						<Sphere radius="1"></Sphere>
+						<appearance>
+							<material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					
+					<transform scale="0.11 0.11 0.03" rotation="0 1 0 0.34888888888" translation="0.5 0.15 0.7"><!--左目瞳-->
+						<shape>
+						<Sphere radius="1"></Sphere>
+						<appearance>
+							<material diffuseColor="0 0 0" specularColor="0 0 0" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					
+					<transform scale="0.2 0.2 0.1" rotation="0 1 0 -0.52333333333" translation="-0.5 0.14 0.6"><!--右目-->
+						<shape>
+						<Sphere radius="1"></Sphere>
+						<appearance>
+							<material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					
+					<transform scale="0.11 0.11 0.03" rotation="0 1 0 -0.34888888888" translation="-0.5 0.15 0.7"><!--右目瞳-->
+						<shape>
+						<Sphere radius="1"></Sphere>
+						<appearance>
+							<material diffuseColor="0 0 0" specularColor="0 0 0" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+				</transform>
+				</transform>
+					
+				<transform translation="0 1.2 0"><!--胴（黒色）-->
+				<transform scale="1 1 1" rotation="0 0 1 0" translation="0 1.22 0"><!--首-->
+					<shape>
+					<Dish diameter="2.55" height="3" bottom="true"></Dish>
+					<appearance>
+						<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+					
+				<transform scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--胴-->
+					<shape>
+					<Snout dbottom='3.0' dtop='2.55' height='2.5' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+					<appearance>
+						<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+					
+				<transform scale="1 1 1" rotation="0 0 1 3.14" translation="0 -1.24 0"><!--腰-->
+					<shape>
+					<Dish diameter="3.055" height="2" bottom="true"></Dish>
+					<appearance>
+						<material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+				</transform>
+				
+				<transform translation="0 1.158 0.09"><!--胴（黄色ライン）-->
+				<transform scale="1.02 0.9 1">
+					<transform rotation="1 0 0 0.08722222222">
+					<transform scale="1 1 1" rotation="0 0 1 0" translation="0 1.22 0"><!--首-->
+						<shape>
+						<Dish diameter="2.55" height="3" bottom="true"></Dish>
+						<appearance>
+							<material diffuseColor="1 1 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+						
+					<transform scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--胴-->
+						<shape>
+						<Snout dbottom='3.0' dtop='2.55' height='2.77' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+						<appearance>
+							<material diffuseColor="1 1 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+				</transform>
+				</transform>
+				
+				<transform translation="0 1.11 0.13"><!--胴（白色ライン）-->
+				<transform scale="1.02 0.9 1">
+					<transform rotation="1 0 0 0.08722222222">
+					<transform scale="1 1 1" rotation="0 0 1 0" translation="0 1.22 0"><!--首-->
+						<shape>
+						<Dish diameter="2.55" height="3" bottom="true"></Dish>
+						<appearance>
+							<material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+						
+					<transform scale="1 1 1" rotation="0 0 1 0" translation="0 0 0"><!--胴-->
+						<shape>
+						<Snout dbottom='3.045' dtop='2.55' height='2.77' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+						<appearance>
+							<material diffuseColor="1 1 1" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+				</transform>
+				</transform>
+			</transform>
+
+			<transform scale="0.2 1 0.2" rotation="1 0 0 -0.52333333333" translation="0.5 -1.2 1"><!--左足上-->
+				<shape>
+				<Cylinder radius="1" height="1.5" top="true" bottom="true"></Cylinder>
+				<appearance>
+					<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+				</appearance>
+				</shape>
+			</transform>
+				
+			<transform translation="0.5 -1.85 2.1"><!--左足下-->
+			<transform rotation="1 0 0 -1.57">
+				<transform scale="1 1 0.4" rotation="0 0 1 0" translation="0 0.6 0"><!--左足かかと-->
+					<shape>
+					<Dish diameter="0.8" height="1" bottom="true"></Dish>
+					<appearance>
+						<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+					
+				<transform scale="1 1 0.4" rotation="0 0 1 0" translation="0 0 0"><!--左足腹-->
+					<shape>
+					<Snout dbottom='1.0' dtop='0.8' height='1.2' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+					<appearance>
+						<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+					
+				<transform translation="0 -1 0.4">
+					<transform rotation="1 0 0 0"><!--左足つま先曲がり-->
+					<transform scale="0.4 0.4 1" rotation="0 1 0 1.57" translation="0 0.4 0">
+						<shape>
+						<Torus angle='1.04666666667' caps='true' innerRadius='0.5' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+						<appearance>
+							<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+				</transform>
+				
+				<transform scale="1 1 0.4" rotation="1 0 0 -1.04666666667" translation="0 -1.095 0.46"><!--左足つま先上-->
+					<shape>
+					<Snout dbottom='1.0' dtop='1.0' height='0.6' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+					<appearance>
+						<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 -1.244 0.719">
+					<transform rotation="1 0 0 -1.04666666667">
+					<transform scale="1 1 0.4" rotation="0 0 1 3.14" translation="0 0 0"><!--左足つま先下-->
+						<shape>
+						<Dish diameter="1.0" height="1" bottom="true"></Dish>
+						<appearance>
+							<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+				</transform>
+				</transform>
+			</transform>
+				
+			<transform scale="0.2 1 0.2" rotation="1 0 0 0.52333333333" translation="-0.5 -1.2 -1"><!--右足上-->
+				<shape>
+				<Cylinder radius="1" height="1.5" top="true" bottom="true"></Cylinder>
+				<appearance>
+					<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+				</appearance>
+				</shape>
+			</transform>
+				
+			<transform translation="-0.5 -1.85 -0.3"><!--右足下-->
+				<transform rotation="1 0 0 -1.57">
+				<transform scale="1 1 0.4" rotation="1 0 0 0.52333333333" translation="0 1.16 0.05"><!--右足かかと-->
+					<shape>
+					<Dish diameter="0.8" height="1" bottom="true"></Dish>
+					<appearance>
+						<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+					
+				<transform translation="0 1 0.328">
+					<transform rotation="1 0 0 0.52333333333"><!--右足かかと曲がり-->
+					<transform scale="0.32 0.35 0.8" rotation="0 1 0 1.57" translation="0 0 0">
+						<shape>
+						<Torus angle='0.52333333333' caps='true' innerRadius='0.5' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+						<appearance>
+							<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+				</transform>
+					
+				<transform scale="1 1 0.4" rotation="0 0 1 0" translation="0 0 0"><!--右足腹-->
+					<shape>
+					<Snout dbottom='1.0' dtop='0.8' height='2.0' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+					<appearance>
+						<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+					
+				<transform scale="1 1 0.4" rotation="0 0 1 3.14" translation="0 -1 0"><!--右足つま先-->
+					<shape>
+					<Dish diameter="1.0" height="1" bottom="true"></Dish>
+					<appearance>
+						<material diffuseColor="1 0.27058823529 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+					</appearance>
+					</shape>
+				</transform>
+				</transform>
+			</transform>
+
+			<transform translation="1.7 3.7 1"><!--左腕-->
+				<transform rotation="0 0 1 0.17444444444">
+				<transform rotation="1 0 0 -1.39555555554">
+					<transform translation="-0.76 0 -0.4"><!--左鎖骨-->
+					<transform rotation="0 1 0 0">
+						<transform scale="0.76 0.76 0.4" rotation="0 0 1 1.57" translation="0 0 0">
+						<shape>
+							<Torus angle='1.57' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+					
+					<transform translation="0 0 0"><!--左肩-->
+					<transform rotation="0 1 0 0">
+						<transform scale="0.4 0.39 0.76" rotation="0 1 0 1.57" translation="0 0 0">
+						<shape>
+							<Torus angle='1.57' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+					
+					<transform scale="1 1 0.5" rotation="1 0 0 1.57" translation="0 -0.39 0.25"><!--左二の腕-->
+					<shape>
+						<Snout dbottom='1.0' dtop='1.1' height='0.5' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+						<appearance>
+						<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+					</shape>
+					</transform>
+					
+					<transform translation="0 0.03 0.5"><!--左手首上-->
+					<transform rotation="1 0 0 -1.57">
+						<transform scale="0.42 0.5 0.85" rotation="0 1 0 1.57" translation="0 0 0">
+						<shape>
+							<Torus angle='0.785' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+					
+					<transform translation="0 -0.565 1.2"><!--左手首下-->
+					<transform rotation="1 0 0 1.57">
+						<transform scale="0.42 0.5 0.85" rotation="0 1 0 1.57" translation="0 0 0">
+						<shape>
+							<Torus angle='0.785' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+					
+					<transform scale="0.85 1 0.42" rotation="1 0 0 1.57" translation="0 -0.147 1.19"><!--左指先-->
+					<shape>
+						<Dish diameter="1.3" height="1" bottom="true"></Dish>
+						<appearance>
+						<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+					</shape>
+					</transform>
+				</transform>
+				</transform>
+			</transform>
+			
+			<transform translation="-1.8 0.4 0"><!--右腕-->
+				<transform rotation="0 0 1 -0.24422222219">
+				<transform rotation="0 1 0 1.57">
+					<transform translation="0 3.239 0.061"><!--右鎖骨-->
+					<transform scale="1 1 0.5" rotation="1 0 0 0.52333333333" translation="0 0 0">
+						<shape>
+						<Dish diameter="1.0" height="1" bottom="true"></Dish>
+						<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+						</shape>
+					</transform>
+					</transform>
+					
+					<transform translation="0 3 0.5">
+					<transform rotation="1 0 0 0.52333333333"><!--右肩-->
+						<transform scale="0.5 0.5 1" rotation="0 1 0 1.57" translation="0 0 0">
+						<shape>
+							<Torus angle='0.52333333333' caps='true' innerRadius='0.5' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+					
+					<transform scale="1 1 0.5" rotation="0 0 1 0" translation="0 1.5 0"><!--右二の腕-->
+					<shape>
+						<Snout dbottom='1.3' dtop='1.0' height='3.0' top='true' bottom='true' xoff='0.0' yoff='0.0'></Snout>
+						<appearance>
+						<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+						</appearance>
+					</shape>
+					</transform>
+					
+					<transform translation="0 0 -0.5"><!--右手首-->
+					<transform rotation="0 1 0 3.14">
+						<transform scale="0.5 0.5 1" rotation="0 1 0 1.57" translation="0 0 0">
+						<shape>
+							<Torus angle='0.785' caps='true' innerRadius='0.65' insideOutsideRadius='false' outerRadius='1.0'></Torus>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+					
+					<transform translation="0 -0.3525 -0.145"><!--右指先-->
+					<transform rotation="1 0 0 0.785">
+						<transform scale="1 1 0.5" rotation="0 0 1 3.14" translation="0 0 0">
+						<shape>
+							<Dish diameter="1.3" height="1" bottom="true"></Dish>
+							<appearance>
+							<material diffuseColor="0 0 0" specularColor=".5 .5 .5" shiness="0.2" transparency="0"></material>
+							</appearance>
+						</shape>
+						</transform>
+					</transform>
+					</transform>
+				</transform>
+				</transform>
+			</transform>
+			</transform>
+			</transform>
 
       </scene>
     </x3d>
