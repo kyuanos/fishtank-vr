@@ -117,17 +117,19 @@
             //   return rotMat.mult(viewMat);
             // }
 
-            const viewMat = new x3dom.fields.SFMatrix4f();
-            viewMat._00 = 1; viewMat._01 = 0; viewMat._02 = 0; viewMat._03 = 0;
-            viewMat._10 = 0; viewMat._11 = 1; viewMat._12 = 0; viewMat._13 = 0;
-            viewMat._20 = 0; viewMat._21 = 0; viewMat._22 = 1; viewMat._23 = 0;
-            viewMat._30 = 0; viewMat._31 = 0; viewMat._32 = 0; viewMat._33 = 1;
+            // const viewMat = new x3dom.fields.SFMatrix4f();
+            // viewMat._00 = 1; viewMat._01 = 0; viewMat._02 = 0; viewMat._03 = 0;
+            // viewMat._10 = 0; viewMat._11 = 1; viewMat._12 = 0; viewMat._13 = 0;
+            // viewMat._20 = 0; viewMat._21 = 0; viewMat._22 = 1; viewMat._23 = 0;
+            // viewMat._30 = 0; viewMat._31 = 0; viewMat._32 = 0; viewMat._33 = 1;
 
-            debugStr1 = `VIEW: ${viewMat}`;
+            // debugStr1 = `VIEW: ${viewMat}`;
 
-            return viewMat;
+            // return viewMat;
           }
-          return origGetView.call(this);
+          const origView = origGetView.call(this);
+          debugStr1 = `VIEW: ${origView}`;
+          return origView;
         };
 
         // B. 投影行列（Projection Matrix）の拡張：ご提示の行列式を完全実装
