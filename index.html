@@ -36,17 +36,44 @@
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
-      padding-bottom: 8vh;
+      padding-bottom: 6vh;
     }
 
-    /* メニューバー配置コンテナ */
+    /* メニューバー配置コンテナ（下部ポップアップカード） */
     .menu-group {
-      width: 85%;
+      width: 88%;
       max-width: 380px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       z-index: 10;
+      padding: 20px 16px;
+      background: rgba(8, 20, 40, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(107, 255, 184, 0.25);
+      border-radius: 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+      /* ★ 起動時の下部からのポップアップアニメーション設定 */
+      animation: popupFromBottom 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* ★ 画面下外（120%）から中央位置へのポップアップ定義 */
+    @keyframes popupFromBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(120%);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-8px); /* わずかなバウンス効果 */
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* 各ナビゲーションリンクバー（ボタン） */
@@ -54,39 +81,37 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 22px;
+      padding: 14px 20px;
       /* サイバー風ガラスモーフィズム（半透明＋ブラー） */
-      background: rgba(10, 25, 50, 0.65);
+      background: rgba(12, 30, 60, 0.75);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1.5px solid rgba(107, 255, 184, 0.4);
       border-radius: 12px;
       color: #ffffff;
       text-decoration: none;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: bold;
       letter-spacing: 0.05em;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3),
-                  inset 0 0 10px rgba(107, 255, 184, 0.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
       transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
       cursor: pointer;
 
-      /* ★ ふわっと表示用のアニメーション設定 */
+      /* ★ カード登場後の時間差でのフェードイン */
       opacity: 0;
-      animation: fadeInUp 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      animation: itemFadeIn 0.5s ease-out forwards;
     }
 
-    /* ★ 各タブが順番に浮き上がるように時間差（ディレイ）を設定 */
-    .nav-bar:nth-child(1) { animation-delay: 0.15s; }
-    .nav-bar:nth-child(2) { animation-delay: 0.3s;  }
-    .nav-bar:nth-child(3) { animation-delay: 0.45s; }
-    .nav-bar:nth-child(4) { animation-delay: 0.6s;  }
+    /* ★ ボタンごとの表示ディレイ（順番に表示） */
+    .nav-bar:nth-child(1) { animation-delay: 0.35s; }
+    .nav-bar:nth-child(2) { animation-delay: 0.45s; }
+    .nav-bar:nth-child(3) { animation-delay: 0.55s; }
+    .nav-bar:nth-child(4) { animation-delay: 0.65s; }
 
-    /* ★ 下からふわっと浮き上がるアニメーションの定義 */
-    @keyframes fadeInUp {
+    @keyframes itemFadeIn {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(12px);
       }
       to {
         opacity: 1;
@@ -96,7 +121,7 @@
 
     /* タップ／ホバー時の光るグラデーションアニメーション */
     .nav-bar:hover, .nav-bar:active {
-      background: rgba(16, 45, 80, 0.85);
+      background: rgba(20, 55, 100, 0.9);
       border-color: #6bffb8;
       box-shadow: 0 0 20px rgba(107, 255, 184, 0.6),
                   inset 0 0 15px rgba(107, 255, 184, 0.3);
@@ -118,7 +143,7 @@
     /* 実験用リンクなどの強調スタイル */
     .nav-bar.highlight {
       border-color: rgba(0, 191, 255, 0.7);
-      background: rgba(0, 40, 80, 0.75);
+      background: rgba(0, 45, 95, 0.85);
     }
     
     .nav-bar.highlight:hover, .nav-bar.highlight:active {
@@ -135,7 +160,7 @@
 <body>
 
   <div class="title-container">
-    <!-- 各コンテンツへのリンクバー -->
+    <!-- 各コンテンツへのリンクバー（ボトムポップアップカード） -->
     <div class="menu-group">
       <a href="pingu.htm" class="nav-bar">
         <span>PINGU 3D</span>
