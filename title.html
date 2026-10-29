@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FishTank VR - Menu</title>
+  <style>
+    /* 全体設定 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* 背景画像設定 */
+    .title-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      /* ご提示の背景画像ファイルを指定 */
+      background-image: url('タイトル画面.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 8vh;
+    }
+
+    /* メニューバー配置コンテナ */
+    .menu-group {
+      width: 85%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 10;
+    }
+
+    /* 各ナビゲーションリンクバー（ボタン） */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      /* サイバー風ガラスモーフィズム（半透明＋ブラー） */
+      background: rgba(10, 25, 50, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(107, 255, 184, 0.4);
+      border-radius: 12px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3),
+                  inset 0 0 10px rgba(107, 255, 184, 0.1);
+      transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+      cursor: pointer;
+    }
+
+    /* タップ／ホバー時の光るグラデーションアニメーション */
+    .nav-bar:hover, .nav-bar:active {
+      background: rgba(16, 45, 80, 0.85);
+      border-color: #6bffb8;
+      box-shadow: 0 0 20px rgba(107, 255, 184, 0.6),
+                  inset 0 0 15px rgba(107, 255, 184, 0.3);
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    /* ボタン右側の矢印アイコン */
+    .nav-bar::after {
+      content: '➔';
+      font-size: 0.9rem;
+      color: #6bffb8;
+      transition: transform 0.2s;
+    }
+
+    .nav-bar:hover::after, .nav-bar:active::after {
+      transform: translateX(4px);
+    }
+
+    /* 実験用リンクなどの強調スタイル */
+    .nav-bar.highlight {
+      border-color: rgba(0, 191, 255, 0.7);
+      background: rgba(0, 40, 80, 0.75);
+    }
+    
+    .nav-bar.highlight:hover, .nav-bar.highlight:active {
+      border-color: #00bfff;
+      box-shadow: 0 0 20px rgba(0, 191, 255, 0.7),
+                  inset 0 0 15px rgba(0, 191, 255, 0.4);
+    }
+
+    .nav-bar.highlight::after {
+      color: #00bfff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title-container">
+    <!-- 各コンテンツへのリンクバー -->
+    <div class="menu-group">
+      <a href="pingu.htm" class="nav-bar">
+        <span>PINGU 3D</span>
+      </a>
+      <a href="pingu2.htm" class="nav-bar">
+        <span>PINGU 3D Stage 2</span>
+      </a>
+      <a href="demobox.htm" class="nav-bar">
+        <span>Anamorphic Demo Box</span>
+      </a>
+      <!-- 被験者比較実験用 -->
+      <a href="demobox_2.htm" class="nav-bar highlight">
+        <span>探索実験タスク (被験者用)</span>
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>
