@@ -74,129 +74,132 @@
         <viewpoint id="wide_view" description="wide" position="-2.934003 0.480695 35.4967" orientation="0.451689 -0.89185 -0.024102 0.092609"></viewpoint>
         
 		================= 外箱フレーム（6.1インチ実寸ルーム枠構造） =================
-        <!-- 前面フレーム (Z = 0) -->
-        <!-- 前面上梁 -->
-        <transform translation="0 0.0735 0">
-          <shape>
-            <box size="0.078 0.002 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 前面下梁 -->
-        <transform translation="0 -0.0735 0">
-          <shape>
-            <box size="0.078 0.002 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 前面左柱 -->
-        <transform translation="-0.0385 0 0">
-          <shape>
-            <box size="0.002 0.147 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 前面右柱 -->
-        <transform translation="0.039 0 0">
-          <shape>
-            <box size="0.002 0.147 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
+        <Billboard axisOfRotation="0 1 0">
+			<!-- 前面フレーム (Z = 0) -->
+			<!-- 前面上梁 -->
+			<transform translation="0 0.0735 0">
+			<shape>
+				<box size="0.078 0.002 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 前面下梁 -->
+			<transform translation="0 -0.0735 0">
+			<shape>
+				<box size="0.078 0.002 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 前面左柱 -->
+			<transform translation="-0.0385 0 0">
+			<shape>
+				<box size="0.002 0.147 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 前面右柱 -->
+			<transform translation="0.039 0 0">
+			<shape>
+				<box size="0.002 0.147 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
 
-        <!-- 背面フレーム (Z = -0.100) -->
-        <!-- 背面上梁 -->
-        <transform translation="0 0.0735 -0.100">
-          <shape>
-            <box size="0.078 0.002 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 背面下梁 -->
-        <transform translation="0 -0.0735 -0.100">
-          <shape>
-            <box size="0.078 0.002 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 背面左柱 -->
-        <transform translation="-0.0385 0 -0.100">
-          <shape>
-            <box size="0.002 0.147 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 背面右柱 -->
-        <transform translation="0.039 0 -0.100">
-          <shape>
-            <box size="0.002 0.147 0.002"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
+			<!-- 背面フレーム (Z = -0.100) -->
+			<!-- 背面上梁 -->
+			<transform translation="0 0.0735 -0.100">
+			<shape>
+				<box size="0.078 0.002 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 背面下梁 -->
+			<transform translation="0 -0.0735 -0.100">
+			<shape>
+				<box size="0.078 0.002 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 背面左柱 -->
+			<transform translation="-0.0385 0 -0.100">
+			<shape>
+				<box size="0.002 0.147 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 背面右柱 -->
+			<transform translation="0.039 0 -0.100">
+			<shape>
+				<box size="0.002 0.147 0.002"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
 
-        <!-- 奥行きフレーム（前後を繋ぐ4辺、Z = -0.050） -->
-        <!-- 左上梁 -->
-        <transform translation="-0.0385 0.0735 -0.050">
-          <shape>
-            <box size="0.002 0.002 0.100"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 右上梁 -->
-        <transform translation="0.039 0.0735 -0.050">
-          <shape>
-            <box size="0.002 0.002 0.100"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 左下梁 -->
-        <transform translation="-0.0385 -0.0735 -0.050">
-          <shape>
-            <box size="0.002 0.002 0.100"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
-        <!-- 右下梁 -->
-        <transform translation="0.039 -0.0735 -0.050">
-          <shape>
-            <box size="0.002 0.002 0.100"></box>
-            <appearance>
-              <material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
-            </appearance>
-          </shape>
-        </transform>
+			<!-- 奥行きフレーム（前後を繋ぐ4辺、Z = -0.050） -->
+			<!-- 左上梁 -->
+			<transform translation="-0.0385 0.0735 -0.050">
+			<shape>
+				<box size="0.002 0.002 0.100"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 右上梁 -->
+			<transform translation="0.039 0.0735 -0.050">
+			<shape>
+				<box size="0.002 0.002 0.100"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 左下梁 -->
+			<transform translation="-0.0385 -0.0735 -0.050">
+			<shape>
+				<box size="0.002 0.002 0.100"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
+			<!-- 右下梁 -->
+			<transform translation="0.039 -0.0735 -0.050">
+			<shape>
+				<box size="0.002 0.002 0.100"></box>
+				<appearance>
+				<material diffuseColor="0.15 0.25 0.45" specularColor="0.8 0.9 1.0"></material>
+				</appearance>
+			</shape>
+			</transform>
 
-        <!-- 外枠（ディスプレイ開口フレーム） -->
-        <transform translation="0 0 -0.05">
-          <shape>
-            <box size="0.079 0.148 0.101"></box>
-            <appearance>
-              <material diffuseColor="0.4 0.7 1.0" specularColor="0.9 0.9 1.0" shininess="0.8" transparency="0.85"></material>
-            </appearance>
-          </shape>
-        </transform>
+			<!-- 外枠（ディスプレイ開口フレーム） -->
+			<transform translation="0 0 -0.05">
+			<shape>
+				<box size="0.079 0.148 0.101"></box>
+				<appearance>
+				<material diffuseColor="0.4 0.7 1.0" specularColor="0.9 0.9 1.0" shininess="0.8" transparency="0.85"></material>
+				</appearance>
+			</shape>
+			</transform>
+		</Billboard>
+		
   
         <!-- オブジェクト -->
 	    <transform scale="0.01 0.01 0.01" translation="0 -0.053 -0.04">
