@@ -244,7 +244,7 @@
     let isTrackingEnabled = true;
 
     // タブの折りたたみ状態フラグ（false: 展開, true: 折りたたみ）
-    let isCollapsed = false;
+    let isCollapsed = true;
 
     // リアルタイム推定距離(m)の保持用変数
     let currentDistanceMeters = 0.35;
