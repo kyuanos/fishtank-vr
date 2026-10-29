@@ -28,7 +28,6 @@
       position: relative;
       width: 100vw;
       height: 100vh;
-      /* ご提示の背景画像ファイルを指定 */
       background-image: url('タイトル画面.jpg');
       background-size: cover;
       background-position: center;
@@ -71,6 +70,28 @@
                   inset 0 0 10px rgba(107, 255, 184, 0.1);
       transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
       cursor: pointer;
+
+      /* ★ ふわっと表示用のアニメーション設定 */
+      opacity: 0;
+      animation: fadeInUp 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* ★ 各タブが順番に浮き上がるように時間差（ディレイ）を設定 */
+    .nav-bar:nth-child(1) { animation-delay: 0.15s; }
+    .nav-bar:nth-child(2) { animation-delay: 0.3s;  }
+    .nav-bar:nth-child(3) { animation-delay: 0.45s; }
+    .nav-bar:nth-child(4) { animation-delay: 0.6s;  }
+
+    /* ★ 下からふわっと浮き上がるアニメーションの定義 */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* タップ／ホバー時の光るグラデーションアニメーション */
