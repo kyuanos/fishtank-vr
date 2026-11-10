@@ -267,27 +267,89 @@
             </appearance>
           </shape>
         </transform> -->
+        <!-- ================= 箱のモデル ================= -->
+        <transform scale="0.005 0.005 0.005" translation="0.024 -0.06 -0.02">
+			<!-- 箱 -->
+			<transform scale="1.3 1.3 1.3">
+				<shape>
+					<box size="4 4 4"></box>
+					<appearance>
+						<material diffuseColor="0.12 0.18 0.24"></material>
+					</appearance>
+				</shape>
+			</transform>
+		</transform>
+		
+		<transform scale="0.005 0.005 0.005" translation="0.024 0.06 -0.07">
+			<!-- 箱 -->
+			<transform scale="1.3 1.3 1.3">
+				<shape>
+					<box size="2 4 3"></box>
+					<appearance>
+						<material diffuseColor="0.12 0.18 0.24"></material>
+					</appearance>
+				</shape>
+			</transform>
+		</transform>
+		
+		<transform scale="0.005 0.005 0.005" translation="-0.025 0 -0.06">
+			<!-- 箱 -->
+			<transform scale="1.3 1.3 1.3">
+				<shape>
+					<box size="4 4 4"></box>
+					<appearance>
+						<material diffuseColor="0.12 0.18 0.24"></material>
+					</appearance>
+				</shape>
+			</transform>
+		</transform>
+		
+		<transform scale="0.005 0.005 0.005" translation="-0.025 -0.06 -0.06">
+			<!-- 箱 -->
+			<transform scale="1.3 1.3 1.3">
+				<shape>
+					<box size="4 2 2"></box>
+					<appearance>
+						<material diffuseColor="0.12 0.18 0.24"></material>
+					</appearance>
+				</shape>
+			</transform>
+		</transform>
+				
 		<!-- ================= 魚のモデル ================= -->
-		<transform scale="0.015 0.015 0.015" translation="0 0 -0.04">
-			<transform rotation="0 1 0 0.5"> <!-- 斜め向きに配置 -->
+		<!--魚右上後-->
+		<transform scale="0.005 0.005 0.005" translation="0.02 0.068 -0.09">
+			<transform rotation="0 1 0 3.14"> <!-- 正面（画面手前）向きに配置 -->
 				
 				<!-- 胴体 -->
 				<transform scale="3 1.5 0.5">
 					<shape>
 						<sphere radius="1"></sphere>
 						<appearance>
-							<material diffuseColor="0.1 0.4 0.9" specularColor="0.8 0.9 1.0" shininess="0.9" emissiveColor="0.0 0.1 0.3" transparency="0.3"></material>
+							<material diffuseColor="0.1 0.3 0.5"></material>
 						</appearance>
 					</shape>
 				</transform>
-
+				
+				<!-- 胴体の文字「K」 (反対面：裏から見ても反転しないように180度回転) -->
+				<transform translation="0 0 -0.52" rotation="0 1 0 3.14">
+					<shape>
+						<text string='"K"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
 				<!-- 目 (左) -->
 				<transform translation="1.5 0.3 0.42">
 					<transform scale="0.25 0.25 0.25">
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="1 1 1" transparency="0"></material>
+								<material diffuseColor="1 1 1"></material>
 							</appearance>
 						</shape>
 					</transform>
@@ -296,7 +358,7 @@
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="0 0 0" transparency="0"></material>
+								<material diffuseColor="0 0 0"></material>
 							</appearance>
 						</shape>
 					</transform>
@@ -308,7 +370,7 @@
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="1 1 1" transparency="0"></material>
+								<material diffuseColor="1 1 1"></material>
 							</appearance>
 						</shape>
 					</transform>
@@ -317,7 +379,7 @@
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="0 0 0" transparency="0"></material>
+								<material diffuseColor="0 0 0"></material>
 							</appearance>
 						</shape>
 					</transform>
@@ -329,153 +391,906 @@
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="0.1 0.3 0.8" transparency="0.1"></material>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
 							</appearance>
 						</shape>
 					</transform>
 				</transform>
 
-				<!-- えら蓋 (左) -->
-				<transform translation="1.0 0 0.48">
-					<transform scale="0.4 0.6 0.1" rotation="0 1 0 0.2">
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+			</transform>
+		</transform>
+		
+		<!--魚右下後-->
+		<transform scale="0.005 0.005 0.005" translation="0.036 -0.068 -0.08">
+			<transform rotation="0 1 0 1.57"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<!-- 胴体の文字「4」 (反対面：裏から見ても反転しないように180度回転) -->
+				<transform translation="0 0 -0.52" rotation="0 1 0 3.14">
+					<shape>
+						<text string='"4"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="0.3 0.5 1.0" specularColor="0.8 0.9 1.0" shininess="0.8" transparency="0.2"></material>
+								<material diffuseColor="1 1 1"></material>
 							</appearance>
 						</shape>
 					</transform>
-				</transform>
-
-				<!-- えら蓋 (右) -->
-				<transform translation="1.0 0 -0.48">
-					<transform scale="0.4 0.6 0.1" rotation="0 1 0 -0.2">
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
 						<shape>
 							<sphere radius="1"></sphere>
 							<appearance>
-								<material diffuseColor="0.3 0.5 1.0" specularColor="0.8 0.9 1.0" shininess="0.8" transparency="0.2"></material>
+								<material diffuseColor="0 0 0"></material>
 							</appearance>
 						</shape>
 					</transform>
 				</transform>
 
-				<!-- 第一背びれ -->
-				<transform translation="0.5 1.4 0">
-					<transform scale="0.8 0.7 0.05" rotation="0 0 1 -0.2">
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
 						<shape>
 							<cone></cone>
 							<appearance>
-								<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
+								<material diffuseColor="0.1 0.3 0.5"></material>
 							</appearance>
 						</shape>
 					</transform>
 				</transform>
 
-				<!-- 第二背びれ -->
-				<transform translation="-1.2 1.1 0">
-					<transform scale="0.9 0.6 0.05" rotation="0 0 1 -0.6">
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
 						<shape>
 							<cone></cone>
 							<appearance>
-								<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
+								<material diffuseColor="0.1 0.3 0.5"></material>
 							</appearance>
 						</shape>
 					</transform>
 				</transform>
 
-				<!-- 胸びれ (左) -->
-				<transform translation="0.5 -0.3 0.55">
-					<transform scale="0.6 0.3 0.05" rotation="1 0 0 0.5">
-						<transform rotation="0 0 1 -0.5">
-							<shape>
-								<cone></cone>
-								<appearance>
-									<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
-								</appearance>
-							</shape>
-						</transform>
+			</transform>
+		</transform>
+		
+		<!--魚左下後-->
+		<transform scale="0.005 0.005 0.005" translation="-0.02 -0.068 -0.09">
+			<transform rotation="1 0 0 -0.785"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 0 0.52">
+					<shape>
+						<text string='"?"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<!-- 文字の色（ここでは白） -->
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
 					</transform>
 				</transform>
 
-				<!-- 胸びれ (右) -->
-				<transform translation="0.5 -0.3 -0.55">
-					<transform scale="0.6 0.3 0.05" rotation="1 0 0 -0.5">
-						<transform rotation="0 0 1 -0.5">
-							<shape>
-								<cone></cone>
-								<appearance>
-									<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
-								</appearance>
-							</shape>
-						</transform>
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
 					</transform>
 				</transform>
 
-				<!-- 腹びれ (左) -->
-				<transform translation="0 -1.1 0.2">
-					<transform scale="0.4 0.6 0.05" rotation="1 0 0 0.2">
-						<transform rotation="0 0 1 -0.5">
-							<shape>
-								<cone></cone>
-								<appearance>
-									<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
-								</appearance>
-							</shape>
-						</transform>
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
 					</transform>
 				</transform>
 
-				<!-- 腹びれ (右) -->
-				<transform translation="0 -1.1 -0.2">
-					<transform scale="0.4 0.6 0.05" rotation="1 0 0 -0.2">
-						<transform rotation="0 0 1 -0.5">
-							<shape>
-								<cone></cone>
-								<appearance>
-									<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
-								</appearance>
-							</shape>
-						</transform>
-					</transform>
-				</transform>
-
-				<!-- 尻びれ -->
-				<transform translation="-1.2 -1.0 0">
-					<transform scale="0.8 0.6 0.05" rotation="0 0 1 0.8">
-						<transform rotation="0 0 1 3.14">
-							<shape>
-								<cone></cone>
-								<appearance>
-									<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
-								</appearance>
-							</shape>
-						</transform>
-					</transform>
-				</transform>
-
-				<!-- 尾びれ (上) -->
-				<transform translation="-3.4 0.6 0">
-					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.0">
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
 						<shape>
 							<cone></cone>
 							<appearance>
-								<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
+								<material diffuseColor="0.1 0.3 0.5"></material>
 							</appearance>
 						</shape>
 					</transform>
 				</transform>
 
-				<!-- 尾びれ (下) -->
-				<transform translation="-3.4 -0.6 0">
-					<transform scale="1.0 1.6 0.05" rotation="0 0 1 1.0">
-						<transform rotation="0 0 1 3.14">
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
 							<shape>
 								<cone></cone>
 								<appearance>
-									<material diffuseColor="0.3 0.2 0.9" emissiveColor="0.1 0.0 0.4" transparency="0.4"></material>
+									<material diffuseColor="0.85 0.88 0.9"></material>
 								</appearance>
 							</shape>
 						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+			</transform>
+		</transform>
+		
+		<!--魚左上後-->
+		<transform scale="0.005 0.005 0.005" translation="-0.02 0.072 -0.09">
+			<transform rotation="1 0 0 1.57"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 0 0.52">
+					<shape>
+						<text string='"1"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<!-- 文字の色（ここでは白） -->
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+			</transform>
+		</transform>
+		
+		<!--魚左上前-->
+		<transform scale="0.005 0.005 0.005" translation="-0.02 0.06 -0.01">
+			<transform rotation="1 0 0 0"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 0 0.52">
+					<shape>
+						<text string='"T"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<!-- 文字の色（ここでは白） -->
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 胴体の文字「T」 (反対面：裏から見ても反転しないように180度回転) -->
+				<transform translation="0 0 -0.52" rotation="0 1 0 3.14">
+					<shape>
+						<text string='"T"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+			</transform>
+		</transform>
+		
+		<!--魚左上中-->
+		<transform scale="0.005 0.005 0.005" translation="-0.024 0.07 -0.04">
+			<transform rotation="1 0 1 1.57"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 0 0.52">
+					<shape>
+						<text string='"7"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<!-- 文字の色（ここでは白） -->
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+			</transform>
+		</transform>
+		
+		<!--魚左中-->
+		<transform scale="0.005 0.005 0.005" translation="-0.02 0 -0.09">
+			<transform rotation="0 1 0 0"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 0 0.52">
+					<shape>
+						<text string='"Q"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<!-- 文字の色（ここでは白） -->
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+			</transform>
+		</transform>
+		
+		<!--魚右上前-->
+		<transform scale="0.005 0.005 0.005" translation="0.024 0.072 -0.01">
+			<transform rotation="1 0 0 1.57"> <!-- 正面（画面手前）向きに配置 -->
+				
+				<!-- 胴体 -->
+				<transform scale="3 1.5 0.5">
+					<shape>
+						<sphere radius="1"></sphere>
+						<appearance>
+							<material diffuseColor="0.1 0.3 0.5"></material>
+						</appearance>
+					</shape>
+				</transform>
+				
+				<transform translation="0 0 0.52">
+					<shape>
+						<text string='"+"'>
+							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
+						</text>
+						<appearance>
+							<!-- 文字の色（ここでは白） -->
+							<material diffuseColor="1 1 1"></material>
+						</appearance>
+					</shape>
+				</transform>
+
+				<!-- 目 (左) -->
+				<transform translation="1.5 0.3 0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 目 (右) -->
+				<transform translation="1.5 0.3 -0.42">
+					<transform scale="0.25 0.25 0.25">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="1 1 1"></material>
+							</appearance>
+						</shape>
+					</transform>
+					<!-- 瞳 -->
+					<transform translation="0.05 0 -0.15" scale="0.12 0.12 0.12">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0 0 0"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 口 -->
+				<transform translation="2.8 0 0">
+					<transform scale="0.3 0.15 0.2">
+						<shape>
+							<sphere radius="1"></sphere>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.58"></material> <!-- 口の形が分かるように少しだけ濃い青色 -->
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 背びれ -->
+				<transform translation="-0.2 1.3 0">
+					<transform scale="1.5 0.8 0.05" rotation="0 0 1 -0.4">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
+					</transform>
+				</transform>
+
+				<!-- 腹びれ -->
+				<transform translation="0 -1.1 0">
+					<transform scale="0.4 0.6 0.05" rotation="0 1 0 3.14">
+						<transform rotation="0 0 1 -0.5">
+							<shape>
+								<cone></cone>
+								<appearance>
+									<material diffuseColor="0.85 0.88 0.9"></material>
+								</appearance>
+							</shape>
+						</transform>
+					</transform>
+				</transform>
+
+				<!-- 尾びれ -->
+				<transform translation="-2.4 0 0">
+					<transform scale="1.0 1.6 0.05" rotation="0 0 1 -1.57">
+						<shape>
+							<cone></cone>
+							<appearance>
+								<material diffuseColor="0.1 0.3 0.5"></material>
+							</appearance>
+						</shape>
 					</transform>
 				</transform>
 
