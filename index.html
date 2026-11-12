@@ -55,19 +55,21 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 14px;
-      /* サイバー風ガラスモーフィズム（半透明＋ブラー） */
-      background: rgba(28, 93, 101, 0.65);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      border: 1.5px solid rgba(107, 255, 184, 0.4);
+      /* FishTankVRロゴに合わせたアクアブルーのガラスモーフィズム */
+      background: linear-gradient(135deg, rgba(16, 75, 115, 0.7), rgba(8, 45, 75, 0.65));
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1.5px solid rgba(0, 215, 255, 0.55);
       border-radius: 12px;
-      color: #ffffff;
+      color: #e6f9ff;
+      text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: bold;
       letter-spacing: 0.03em;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3),
-                  inset 0 0 10px rgba(107, 255, 184, 0.1);
+      box-shadow: 0 8px 20px rgba(0, 20, 45, 0.35),
+                  0 0 12px rgba(0, 210, 255, 0.25),
+                  inset 0 0 12px rgba(0, 210, 255, 0.15);
       transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
       cursor: pointer;
 
@@ -96,10 +98,11 @@
 
     /* タップ／ホバー時の光るグラデーションアニメーション */
     .nav-bar:hover, .nav-bar:active {
-      background: rgba(16, 45, 80, 0.85);
-      border-color: #6bffb8;
-      box-shadow: 0 0 20px rgba(107, 255, 184, 0.6),
-                  inset 0 0 15px rgba(107, 255, 184, 0.3);
+      background: linear-gradient(135deg, rgba(22, 95, 145, 0.85), rgba(12, 60, 95, 0.8));
+      border-color: #00f0ff;
+      color: #ffffff;
+      box-shadow: 0 0 25px rgba(0, 220, 255, 0.75),
+                  inset 0 0 18px rgba(0, 220, 255, 0.35);
       transform: translateY(-2px) scale(1.02);
     }
 
@@ -107,7 +110,8 @@
     .nav-bar::after {
       content: '➔';
       font-size: 0.8rem;
-      color: #6bffb8;
+      color: #00d8ff;
+      text-shadow: 0 0 8px rgba(0, 216, 255, 0.8);
       margin-left: 6px;
       flex-shrink: 0;
       transition: transform 0.2s;
@@ -140,17 +144,17 @@
     <!-- 各コンテンツへのリンクバー -->
     <div class="menu-group">
       <a href="pingu.htm" class="nav-bar">
-        <span>PINGU 3D</span>
+        <span>ピングー 3D</span>
       </a>
       <a href="pingu2.htm" class="nav-bar">
-        <span>PINGU Fullscreen</span>
+        <span>ピングー フルスクリーン</span>
       </a>
       <a href="demobox.htm" class="nav-bar">
-        <span>PINGU Prototype</span>
+        <span>ピングー プロトタイプ</span>
       </a>
       <!-- 被験者比較実験用 -->
       <a href="experiment.htm" class="nav-bar">
-        <span>Experimental space</span>
+        <span>実験部屋</span>
       </a>
     </div>
   </div>
