@@ -41,11 +41,11 @@
 
     /* メニューバー配置コンテナ */
     .menu-group {
-      width: 85%;
+      width: 92%;
       max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       z-index: 10;
     }
 
@@ -54,7 +54,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 22px;
+      padding: 12px 14px;
       /* サイバー風ガラスモーフィズム（半透明＋ブラー） */
       background: rgba(28, 93, 101, 0.65);
       backdrop-filter: blur(4px);
@@ -63,9 +63,9 @@
       border-radius: 12px;
       color: #ffffff;
       text-decoration: none;
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: bold;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3),
                   inset 0 0 10px rgba(107, 255, 184, 0.1);
       transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
@@ -106,8 +106,10 @@
     /* ボタン右側の矢印アイコン */
     .nav-bar::after {
       content: '➔';
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: #6bffb8;
+      margin-left: 6px;
+      flex-shrink: 0;
       transition: transform 0.2s;
     }
 
