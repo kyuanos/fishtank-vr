@@ -41,11 +41,11 @@
 
     /* メニューバー配置コンテナ */
     .menu-group {
-      width: 85%;
+      width: 92%;
       max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       z-index: 10;
     }
 
@@ -54,20 +54,22 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 22px;
-      /* サイバー風ガラスモーフィズム（半透明＋ブラー） */
-      background: rgba(28, 93, 101, 0.65);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      border: 1.5px solid rgba(107, 255, 184, 0.4);
+      padding: 12px 14px;
+      /* FishTankVRロゴに合わせたアクアブルーのガラスモーフィズム */
+      background: linear-gradient(135deg, rgba(16, 75, 115, 0.7), rgba(8, 45, 75, 0.65));
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1.5px solid rgba(0, 215, 255, 0.55);
       border-radius: 12px;
-      color: #ffffff;
+      color: #e6f9ff;
+      text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
       text-decoration: none;
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: bold;
-      letter-spacing: 0.05em;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3),
-                  inset 0 0 10px rgba(107, 255, 184, 0.1);
+      letter-spacing: 0.03em;
+      box-shadow: 0 8px 20px rgba(0, 20, 45, 0.35),
+                  0 0 12px rgba(0, 210, 255, 0.25),
+                  inset 0 0 12px rgba(0, 210, 255, 0.15);
       transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
       cursor: pointer;
 
@@ -77,10 +79,11 @@
     }
 
     /* ★ 各タブが順番に浮き上がるように時間差（ディレイ）を設定 */
-    .nav-bar:nth-child(1) { animation-delay: 0.15s; }
-    .nav-bar:nth-child(2) { animation-delay: 0.15s; }
-    .nav-bar:nth-child(3) { animation-delay: 0.15s; }
-    .nav-bar:nth-child(4) { animation-delay: 0.15s; }
+    .nav-bar:nth-child(1) { animation-delay: 0.05s; }
+    .nav-bar:nth-child(2) { animation-delay: 0.05s; }
+    .nav-bar:nth-child(3) { animation-delay: 0.05s; }
+    .nav-bar:nth-child(4) { animation-delay: 0.05s; }
+    .nav-bar:nth-child(5) { animation-delay: 0.05s; }
 
     /* ★ 下からふわっと浮き上がるアニメーションの定義 */
     @keyframes fadeInUp {
@@ -96,18 +99,22 @@
 
     /* タップ／ホバー時の光るグラデーションアニメーション */
     .nav-bar:hover, .nav-bar:active {
-      background: rgba(16, 45, 80, 0.85);
-      border-color: #6bffb8;
-      box-shadow: 0 0 20px rgba(107, 255, 184, 0.6),
-                  inset 0 0 15px rgba(107, 255, 184, 0.3);
+      background: linear-gradient(135deg, rgba(22, 95, 145, 0.85), rgba(12, 60, 95, 0.8));
+      border-color: #00f0ff;
+      color: #ffffff;
+      box-shadow: 0 0 25px rgba(0, 220, 255, 0.75),
+                  inset 0 0 18px rgba(0, 220, 255, 0.35);
       transform: translateY(-2px) scale(1.02);
     }
 
     /* ボタン右側の矢印アイコン */
     .nav-bar::after {
       content: '➔';
-      font-size: 0.9rem;
-      color: #6bffb8;
+      font-size: 0.8rem;
+      color: #00d8ff;
+      text-shadow: 0 0 8px rgba(0, 216, 255, 0.8);
+      margin-left: 6px;
+      flex-shrink: 0;
       transition: transform 0.2s;
     }
 
@@ -148,7 +155,10 @@
       </a>
       <!-- 被験者比較実験用 -->
       <a href="experiment.htm" class="nav-bar">
-        <span>Experimental space</span>
+        <span>Experiment Room1</span>
+      </a>
+      <a href="experiment2.htm" class="nav-bar">
+        <span>Experiment Room2</span>
       </a>
     </div>
   </div>
