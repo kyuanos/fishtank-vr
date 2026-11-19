@@ -271,22 +271,20 @@
 		
 		<!-- ================= 箱のモデル ================= -->
         <!-- 箱 -->
-		<transform scale="0.005 0.005 0.005" translation="0 0 0">
-			<transform translation="0 0.6 0" rotation="0 0 1 -0.2">
-				<transform scale="0.65 0.9 0.09">
-					<shape>
-						<box size="1 1 1"></box>
-						<appearance>
-							<material diffuseColor="0.07 0.33 0.13" specularColor="0.15 0.35 0.2" shininess="0.3"></material>
-						</appearance>
-					</shape>
-				</transform>
-			</transform>
-		</transform>
+        <transform translation="0 0 -0.03">
+            <transform scale="0.015 0.015 0.015">
+                <shape>
+                    <box size="1 1 0.05"></box>
+                    <appearance>
+                        <material diffuseColor="0.22 0.23 0.20" specularColor="0.15 0.35 0.2" shininess="0.3"></material>
+                    </appearance>
+                </shape>
+            </transform>
+        </transform>
 				
 		<!-- ================= 魚のモデル ================= -->
 		<!--魚-->
-		<transform scale="0.005 0.005 0.005" translation="0 0 0">
+		<transform scale="0.005 0.005 0.005" translation="0 0 -0.07">
 			<transform rotation="0 1 0 3.14"> <!-- 正面（画面手前）向きに配置 -->
 				
 				<!-- 胴体 -->
@@ -299,10 +297,10 @@
 					</shape>
 				</transform>
 				
-				<!-- 胴体の文字「K」 (反対面：裏から見ても反転しないように180度回転) -->
+				<!-- 胴体の文字「A」 (反対面：裏から見ても反転しないように180度回転) -->
 				<transform translation="0 0 -0.52" rotation="0 1 0 3.14">
 					<shape>
-						<text string='"①Ｋ"'>
+						<text string='"①A"'>
 							<fontstyle family='"SANS"' size="1.2" justify='"MIDDLE" "MIDDLE"'></fontstyle>
 						</text>
 						<appearance>
